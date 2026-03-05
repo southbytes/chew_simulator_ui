@@ -1,70 +1,75 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import '../../viewmodels/home_view_model.dart';
 import '../../domain/models/models.dart';
 import '../theme/app_theme.dart';
 
 class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
+  final HomeViewModel viewModel;
+
+  const HomeScreen({super.key, required this.viewModel});
 
   @override
   Widget build(BuildContext context) {
-    final viewModel = context.watch<HomeViewModel>();
-    final status = viewModel.status;
+    return ListenableBuilder(
+      listenable: viewModel,
+      builder: (context, _) {
+        final status = viewModel.status;
 
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Operational Dashboard',
-            style: Theme.of(context).textTheme.displayLarge,
-          ),
-          const SizedBox(height: 32),
-          Row(
-            children: [
-              Expanded(
-                child: _buildTempCard(
-                  context,
-                  'Cold Bath',
-                  status.currentColdBathTemp,
-                  AppTheme.accentRunning,
-                ),
-              ),
-              const SizedBox(width: 24),
-              Expanded(
-                child: _buildTempCard(
-                  context,
-                  'Hot Bath',
-                  status.currentHotBathTemp,
-                  AppTheme.accentError,
-                ),
-              ),
-              const SizedBox(width: 24),
-              Expanded(
-                child: _buildTempCard(
-                  context,
-                  'Chamber',
-                  status.currentChamberTemp,
-                  AppTheme.accentWarning,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 32),
-          Row(
+        return SingleChildScrollView(
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(flex: 2, child: _buildProgressCard(context, status)),
-              const SizedBox(width: 24),
-              Expanded(
-                flex: 1,
-                child: _buildControlsCard(context, viewModel, status),
+              Text(
+                'Operational Dashboard',
+                style: Theme.of(context).textTheme.displayLarge,
+              ),
+              const SizedBox(height: 32),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildTempCard(
+                      context,
+                      'Cold Bath',
+                      status.currentColdBathTemp,
+                      AppTheme.accentRunning,
+                    ),
+                  ),
+                  const SizedBox(width: 24),
+                  Expanded(
+                    child: _buildTempCard(
+                      context,
+                      'Hot Bath',
+                      status.currentHotBathTemp,
+                      AppTheme.accentError,
+                    ),
+                  ),
+                  const SizedBox(width: 24),
+                  Expanded(
+                    child: _buildTempCard(
+                      context,
+                      'Chamber',
+                      status.currentChamberTemp,
+                      AppTheme.accentWarning,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 32),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(flex: 2, child: _buildProgressCard(context, status)),
+                  const SizedBox(width: 24),
+                  Expanded(
+                    flex: 1,
+                    child: _buildControlsCard(context, viewModel, status),
+                  ),
+                ],
               ),
             ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 

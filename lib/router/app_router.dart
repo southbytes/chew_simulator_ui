@@ -1,39 +1,55 @@
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart'; // Added import for provider
 import '../ui/screens/dashboard_screen.dart';
 import '../ui/screens/home_screen.dart';
 import '../ui/screens/setup_screen.dart';
 import '../ui/screens/constant_mode_screen.dart';
 import '../ui/screens/monitoring_screen.dart';
+// Added imports for ViewModels
+import '../viewmodels/dashboard_view_model.dart';
+import '../viewmodels/home_view_model.dart';
+import '../viewmodels/setup_view_model.dart';
+import '../viewmodels/constant_mode_view_model.dart';
+import '../viewmodels/monitoring_view_model.dart';
 
 final appRouter = GoRouter(
   initialLocation: '/',
   routes: [
     ShellRoute(
-      builder: (context, state, child) => DashboardScreen(child: child),
+      builder: (context, state, child) {
+        return DashboardScreen(
+          viewModel: context.read<DashboardViewModel>(),
+          child: child,
+        );
+      },
       routes: [
         GoRoute(
           path: '/',
-          name: 'home',
-          pageBuilder: (context, state) =>
-              const NoTransitionPage(child: HomeScreen()),
+          pageBuilder: (context, state) => NoTransitionPage(
+            child: HomeScreen(viewModel: context.read<HomeViewModel>()),
+          ),
         ),
         GoRoute(
           path: '/setup',
-          name: 'setup',
-          pageBuilder: (context, state) =>
-              const NoTransitionPage(child: SetupScreen()),
+          pageBuilder: (context, state) => NoTransitionPage(
+            child: SetupScreen(viewModel: context.read<SetupViewModel>()),
+          ),
         ),
         GoRoute(
           path: '/constant',
-          name: 'constant',
-          pageBuilder: (context, state) =>
-              const NoTransitionPage(child: ConstantModeScreen()),
+          pageBuilder: (context, state) => NoTransitionPage(
+            child: ConstantModeScreen(
+              viewModel: context.read<ConstantModeViewModel>(),
+            ),
+          ),
         ),
         GoRoute(
           path: '/monitoring',
-          name: 'monitoring',
-          pageBuilder: (context, state) =>
-              const NoTransitionPage(child: MonitoringScreen()),
+          pageBuilder: (context, state) => NoTransitionPage(
+            child: MonitoringScreen(
+              viewModel: context.read<MonitoringViewModel>(),
+            ),
+          ),
         ),
       ],
     ),

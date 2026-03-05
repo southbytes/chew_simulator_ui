@@ -120,9 +120,14 @@ class MockDeviceRepository implements DeviceRepository {
         return;
       }
 
+      double nextChamber =
+          (nextCold + nextHot) / 2 +
+          (DateTime.now().second % 10 - 5) * 0.5; // Add some noise
+
       _currentStatus = _currentStatus.copyWith(
         currentColdBathTemp: nextCold,
         currentHotBathTemp: nextHot,
+        currentChamberTemp: nextChamber,
         currentCycle: nextCycle,
         progress: nextProgress.clamp(0.0, 1.0),
         remainingTime: _currentStatus.remainingTime > Duration.zero

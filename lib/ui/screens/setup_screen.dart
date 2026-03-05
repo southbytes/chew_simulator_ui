@@ -1,163 +1,170 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import '../../viewmodels/setup_view_model.dart';
 import '../../domain/models/models.dart';
 import '../theme/app_theme.dart';
 
 class SetupScreen extends StatelessWidget {
-  const SetupScreen({super.key});
+  final SetupViewModel viewModel;
+
+  const SetupScreen({super.key, required this.viewModel});
 
   @override
   Widget build(BuildContext context) {
-    final viewModel = context.watch<SetupViewModel>();
-    final settings = viewModel.settings;
+    return ListenableBuilder(
+      listenable: viewModel,
+      builder: (context, _) {
+        final settings = viewModel.settings;
 
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        return SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Configuration',
-                style: Theme.of(context).textTheme.displayLarge,
-              ),
               Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  OutlinedButton.icon(
-                    onPressed: () {}, // Simulated load
-                    icon: const Icon(Icons.file_open),
-                    label: const Text('LOAD'),
+                  Text(
+                    'Configuration',
+                    style: Theme.of(context).textTheme.displayLarge,
                   ),
-                  const SizedBox(width: 12),
-                  OutlinedButton.icon(
-                    onPressed: viewModel.resetToDefault,
-                    icon: const Icon(Icons.refresh),
-                    label: const Text('RESET'),
+                  Row(
+                    children: [
+                      OutlinedButton.icon(
+                        onPressed: () {}, // Simulated load
+                        icon: const Icon(Icons.file_open),
+                        label: const Text('LOAD'),
+                      ),
+                      const SizedBox(width: 12),
+                      OutlinedButton.icon(
+                        onPressed: viewModel.resetToDefault,
+                        icon: const Icon(Icons.refresh),
+                        label: const Text('RESET'),
+                      ),
+                      const SizedBox(width: 12),
+                      ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.primaryColor,
+                          foregroundColor: Colors.white,
+                        ),
+                        onPressed: viewModel.save,
+                        icon: const Icon(Icons.save),
+                        label: const Text('SAVE'),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 12),
-                  ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.primaryColor,
-                      foregroundColor: Colors.white,
-                    ),
-                    onPressed: viewModel.save,
-                    icon: const Icon(Icons.save),
-                    label: const Text('SAVE'),
+                ],
+              ),
+              const SizedBox(height: 16),
+              _buildPresets(viewModel),
+              const SizedBox(height: 32),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: _buildSection(context, 'Temperature Settings', [
+                      _buildSlider(
+                        context,
+                        'Cold Bath Temp',
+                        settings.coldBathTemp,
+                        0,
+                        20,
+                        (v) => viewModel.updateSettings(
+                          settings.copyWith(coldBathTemp: v),
+                        ),
+                        '°C',
+                      ),
+                      _buildSlider(
+                        context,
+                        'Hot Bath Temp',
+                        settings.hotBathTemp,
+                        40,
+                        95,
+                        (v) => viewModel.updateSettings(
+                          settings.copyWith(hotBathTemp: v),
+                        ),
+                        '°C',
+                      ),
+                      _buildSlider(
+                        context,
+                        'Tolerance',
+                        settings.temperatureTolerance,
+                        0.1,
+                        5.0,
+                        (v) => viewModel.updateSettings(
+                          settings.copyWith(temperatureTolerance: v),
+                        ),
+                        '°C',
+                      ),
+                    ]),
+                  ),
+                  const SizedBox(width: 24),
+                  Expanded(
+                    child: _buildSection(context, 'Timing Settings', [
+                      _buildSlider(
+                        context,
+                        'Dwell Time',
+                        settings.dwellTimeSeconds.toDouble(),
+                        1,
+                        300,
+                        (v) => viewModel.updateSettings(
+                          settings.copyWith(dwellTimeSeconds: v.toInt()),
+                        ),
+                        's',
+                      ),
+                      _buildSlider(
+                        context,
+                        'Transfer Time',
+                        settings.transferTimeSeconds.toDouble(),
+                        1,
+                        60,
+                        (v) => viewModel.updateSettings(
+                          settings.copyWith(transferTimeSeconds: v.toInt()),
+                        ),
+                        's',
+                      ),
+                      _buildSlider(
+                        context,
+                        'Draining Time',
+                        settings.drainingTimeSeconds.toDouble(),
+                        0,
+                        60,
+                        (v) => viewModel.updateSettings(
+                          settings.copyWith(drainingTimeSeconds: v.toInt()),
+                        ),
+                        's',
+                      ),
+                    ]),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: _buildSection(context, 'Cycle Settings', [
+                      _buildSlider(
+                        context,
+                        'Number of Cycles',
+                        settings.targetCycles.toDouble(),
+                        1,
+                        10000,
+                        (v) => viewModel.updateSettings(
+                          settings.copyWith(targetCycles: v.toInt()),
+                        ),
+                        '',
+                      ),
+                    ]),
+                  ),
+                  const SizedBox(width: 24),
+                  Expanded(
+                    child: _buildSummaryCard(context, settings, viewModel),
                   ),
                 ],
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          _buildPresets(viewModel),
-          const SizedBox(height: 32),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: _buildSection(context, 'Temperature Settings', [
-                  _buildSlider(
-                    context,
-                    'Cold Bath Temp',
-                    settings.coldBathTemp,
-                    0,
-                    20,
-                    (v) => viewModel.updateSettings(
-                      settings.copyWith(coldBathTemp: v),
-                    ),
-                    '°C',
-                  ),
-                  _buildSlider(
-                    context,
-                    'Hot Bath Temp',
-                    settings.hotBathTemp,
-                    40,
-                    95,
-                    (v) => viewModel.updateSettings(
-                      settings.copyWith(hotBathTemp: v),
-                    ),
-                    '°C',
-                  ),
-                  _buildSlider(
-                    context,
-                    'Tolerance',
-                    settings.temperatureTolerance,
-                    0.1,
-                    5.0,
-                    (v) => viewModel.updateSettings(
-                      settings.copyWith(temperatureTolerance: v),
-                    ),
-                    '°C',
-                  ),
-                ]),
-              ),
-              const SizedBox(width: 24),
-              Expanded(
-                child: _buildSection(context, 'Timing Settings', [
-                  _buildSlider(
-                    context,
-                    'Dwell Time',
-                    settings.dwellTimeSeconds.toDouble(),
-                    1,
-                    300,
-                    (v) => viewModel.updateSettings(
-                      settings.copyWith(dwellTimeSeconds: v.toInt()),
-                    ),
-                    's',
-                  ),
-                  _buildSlider(
-                    context,
-                    'Transfer Time',
-                    settings.transferTimeSeconds.toDouble(),
-                    1,
-                    60,
-                    (v) => viewModel.updateSettings(
-                      settings.copyWith(transferTimeSeconds: v.toInt()),
-                    ),
-                    's',
-                  ),
-                  _buildSlider(
-                    context,
-                    'Draining Time',
-                    settings.drainingTimeSeconds.toDouble(),
-                    0,
-                    60,
-                    (v) => viewModel.updateSettings(
-                      settings.copyWith(drainingTimeSeconds: v.toInt()),
-                    ),
-                    's',
-                  ),
-                ]),
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: _buildSection(context, 'Cycle Settings', [
-                  _buildSlider(
-                    context,
-                    'Number of Cycles',
-                    settings.targetCycles.toDouble(),
-                    1,
-                    10000,
-                    (v) => viewModel.updateSettings(
-                      settings.copyWith(targetCycles: v.toInt()),
-                    ),
-                    '',
-                  ),
-                ]),
-              ),
-              const SizedBox(width: 24),
-              Expanded(child: _buildSummaryCard(context, settings, viewModel)),
-            ],
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 

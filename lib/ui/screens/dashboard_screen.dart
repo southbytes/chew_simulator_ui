@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../../viewmodels/dashboard_view_model.dart';
 import '../../domain/models/models.dart';
@@ -7,11 +6,16 @@ import '../theme/app_theme.dart';
 
 class DashboardScreen extends StatelessWidget {
   final Widget child;
-  const DashboardScreen({super.key, required this.child});
+  final DashboardViewModel viewModel;
+
+  const DashboardScreen({
+    super.key,
+    required this.child,
+    required this.viewModel,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final viewModel = context.watch<DashboardViewModel>();
     final status = viewModel.status;
 
     return Scaffold(
