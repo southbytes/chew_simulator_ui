@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../viewmodels/home_view_model.dart';
 import '../../domain/models/models.dart';
+import '../../domain/commands/result.dart';
 import '../theme/app_theme.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -22,6 +23,84 @@ class HomeScreen extends StatelessWidget {
               Text(
                 'Operational Dashboard',
                 style: Theme.of(context).textTheme.displayLarge,
+              ),
+              const SizedBox(height: 32),
+              Row(
+                children: [
+                  Expanded(
+                    child: ListenableBuilder(
+                      listenable: viewModel.startCommand,
+                      builder: (context, _) {
+                        return _ActionButton(
+                          icon: Icons.play_arrow,
+                          label: 'START SIMULATION',
+                          color: AppTheme.accentReady,
+                          onPressed: viewModel.startCommand.running
+                              ? null
+                              : () async {
+                                  final result = await viewModel.start();
+                                  if (context.mounted) {
+                                    switch (result) {
+                                      case Ok():
+                                        break;
+                                      case Error(error: final e):
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
+                                          SnackBar(content: Text('Error: $e')),
+                                        );
+                                        break;
+                                    }
+                                  }
+                                },
+                          isLoading: viewModel.startCommand.running,
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: ListenableBuilder(
+                      listenable: Listenable.merge([
+                        viewModel.pauseCommand,
+                        viewModel.resumeCommand,
+                      ]),
+                      builder: (context, _) {
+                        final isRunning =
+                            viewModel.pauseCommand.running ||
+                            viewModel.resumeCommand.running;
+                        return _ActionButton(
+                          icon: status.state == DeviceState.paused
+                              ? Icons.play_circle_outline
+                              : Icons.pause_circle_outline,
+                          label: status.state == DeviceState.paused
+                              ? 'RESUME'
+                              : 'PAUSE',
+                          color: AppTheme.accentWarning,
+                          onPressed: isRunning ? null : viewModel.pauseResume,
+                          isLoading: isRunning,
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: ListenableBuilder(
+                      listenable: viewModel.stopCommand,
+                      builder: (context, _) {
+                        return _ActionButton(
+                          icon: Icons.stop_circle_outlined,
+                          label: 'STOP',
+                          color: AppTheme.accentError,
+                          onPressed: viewModel.stopCommand.running
+                              ? null
+                              : viewModel.stop,
+                          isLoading: viewModel.stopCommand.running,
+                        );
+                      },
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 32),
               Row(
@@ -219,7 +298,20 @@ class HomeScreen extends StatelessWidget {
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 20),
                 ),
-                onPressed: viewModel.start,
+                onPressed: () async {
+                  final result = await viewModel.start();
+                  if (context.mounted) {
+                    switch (result) {
+                      case Ok():
+                        break;
+                      case Error(error: final e):
+                        ScaffoldMessenger.of(
+                          context,
+                        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+                        break;
+                    }
+                  }
+                },
                 icon: const Icon(Icons.play_arrow),
                 label: const Text('START RUN'),
               ),
@@ -231,7 +323,20 @@ class HomeScreen extends StatelessWidget {
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 20),
                 ),
-                onPressed: viewModel.pauseResume,
+                onPressed: () async {
+                  final result = await viewModel.pauseResume();
+                  if (context.mounted && result != null) {
+                    switch (result) {
+                      case Ok():
+                        break;
+                      case Error(error: final e):
+                        ScaffoldMessenger.of(
+                          context,
+                        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+                        break;
+                    }
+                  }
+                },
                 icon: Icon(
                   status.state == DeviceState.paused
                       ? Icons.play_arrow
@@ -248,7 +353,20 @@ class HomeScreen extends StatelessWidget {
                   side: const BorderSide(color: AppTheme.accentError),
                   foregroundColor: AppTheme.accentError,
                 ),
-                onPressed: viewModel.stop,
+                onPressed: () async {
+                  final result = await viewModel.stop();
+                  if (context.mounted) {
+                    switch (result) {
+                      case Ok():
+                        break;
+                      case Error(error: final e):
+                        ScaffoldMessenger.of(
+                          context,
+                        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+                        break;
+                    }
+                  }
+                },
                 icon: const Icon(Icons.stop),
                 label: const Text('STOP'),
               ),
@@ -256,6 +374,59 @@ class HomeScreen extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _ActionButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+  final VoidCallback? onPressed;
+  final bool isLoading;
+
+  const _ActionButton({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.onPressed,
+    this.isLoading = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: color.withValues(alpha: 0.1),
+        foregroundColor: color,
+        side: BorderSide(color: color.withValues(alpha: 0.5)),
+        padding: const EdgeInsets.symmetric(vertical: 20),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+      onPressed: isLoading ? null : onPressed,
+      child: isLoading
+          ? SizedBox(
+              height: 20,
+              width: 20,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                valueColor: AlwaysStoppedAnimation<Color>(color),
+              ),
+            )
+          : Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(icon),
+                const SizedBox(width: 8),
+                Text(
+                  label,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.1,
+                  ),
+                ),
+              ],
+            ),
     );
   }
 }

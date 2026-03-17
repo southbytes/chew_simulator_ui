@@ -1,4 +1,5 @@
 import 'dart:async';
+import '../../domain/commands/result.dart';
 import '../../domain/models/models.dart';
 import 'device_repository.dart';
 
@@ -19,76 +20,135 @@ class MockDeviceRepository implements DeviceRepository {
   DeviceStatus get currentStatus => _currentStatus;
 
   @override
-  Future<void> startThermocycle(ThermocycleSettings settings) async {
-    _currentSettings = settings;
-    _currentStatus = _currentStatus.copyWith(
-      state: DeviceState.running,
-      mode: OperationMode.thermocycle,
-      currentCycle: 0,
-      progress: 0.0,
-      remainingTime: settings.estimatedDuration,
-    );
-    _statusController.add(_currentStatus);
-    _startSimulation();
+  Future<Result<void>> startThermocycle(ThermocycleSettings settings) async {
+    final result = await _simulatedAction();
+    switch (result) {
+      case Ok():
+        _currentSettings = settings;
+        _currentStatus = _currentStatus.copyWith(
+          state: DeviceState.running,
+          mode: OperationMode.thermocycle,
+          currentCycle: 0,
+          progress: 0.0,
+          remainingTime: settings.estimatedDuration,
+        );
+        _statusController.add(_currentStatus);
+        _startSimulation();
+        return result;
+      case Error():
+        return result;
+    }
   }
 
   @override
-  Future<void> startConstantMode(ConstantModeSettings settings) async {
-    _currentStatus = _currentStatus.copyWith(
-      state: DeviceState.running,
-      mode: OperationMode.constant,
-      progress: 0.0,
-      remainingTime: settings.isInfinite ? Duration.zero : settings.duration,
-    );
-    _statusController.add(_currentStatus);
-    _startSimulation();
+  Future<Result<void>> startConstantMode(ConstantModeSettings settings) async {
+    final result = await _simulatedAction();
+    switch (result) {
+      case Ok():
+        _currentStatus = _currentStatus.copyWith(
+          state: DeviceState.running,
+          mode: OperationMode.constant,
+          progress: 0.0,
+          remainingTime: settings.isInfinite
+              ? Duration.zero
+              : settings.duration,
+        );
+        _statusController.add(_currentStatus);
+        _startSimulation();
+        return result;
+      case Error():
+        return result;
+    }
   }
 
   @override
-  Future<void> pause() async {
-    _currentStatus = _currentStatus.copyWith(state: DeviceState.paused);
-    _statusController.add(_currentStatus);
-    _timer?.cancel();
+  Future<Result<void>> pause() async {
+    final result = await _simulatedAction();
+    switch (result) {
+      case Ok():
+        _currentStatus = _currentStatus.copyWith(state: DeviceState.paused);
+        _statusController.add(_currentStatus);
+        _timer?.cancel();
+        return result;
+      case Error():
+        return result;
+    }
   }
 
   @override
-  Future<void> resume() async {
-    _currentStatus = _currentStatus.copyWith(state: DeviceState.running);
-    _statusController.add(_currentStatus);
-    _startSimulation();
+  Future<Result<void>> resume() async {
+    final result = await _simulatedAction();
+    switch (result) {
+      case Ok():
+        _currentStatus = _currentStatus.copyWith(state: DeviceState.running);
+        _statusController.add(_currentStatus);
+        _startSimulation();
+        return result;
+      case Error():
+        return result;
+    }
   }
 
   @override
-  Future<void> stop() async {
-    _currentStatus = _currentStatus.copyWith(
-      state: DeviceState.ready,
-      mode: OperationMode.idle,
-      progress: 0.0,
-    );
-    _statusController.add(_currentStatus);
-    _timer?.cancel();
+  Future<Result<void>> stop() async {
+    final result = await _simulatedAction();
+    switch (result) {
+      case Ok():
+        _currentStatus = _currentStatus.copyWith(
+          state: DeviceState.ready,
+          mode: OperationMode.idle,
+          progress: 0.0,
+        );
+        _statusController.add(_currentStatus);
+        _timer?.cancel();
+        return result;
+      case Error():
+        return result;
+    }
   }
 
   @override
-  Future<void> emergencyStop() async {
-    _currentStatus = _currentStatus.copyWith(
-      state: DeviceState.error,
-      mode: OperationMode.idle,
-    );
-    _statusController.add(_currentStatus);
-    _timer?.cancel();
+  Future<Result<void>> emergencyStop() async {
+    final result = await _simulatedAction();
+    switch (result) {
+      case Ok():
+        _currentStatus = _currentStatus.copyWith(
+          state: DeviceState.error,
+          mode: OperationMode.idle,
+        );
+        _statusController.add(_currentStatus);
+        _timer?.cancel();
+        return result;
+      case Error():
+        return result;
+    }
   }
 
   @override
-  Future<void> saveSettings(ThermocycleSettings settings) async {
-    // In a real app, this would save to SharedPreferences or a database
-    await Future.delayed(const Duration(milliseconds: 500));
+  Future<Result<void>> saveSettings(ThermocycleSettings settings) async {
+    final result = await _simulatedAction();
+    switch (result) {
+      case Ok():
+        return result;
+      case Error():
+        return result;
+    }
   }
 
   @override
-  Future<ThermocycleSettings> loadSettings() async {
-    await Future.delayed(const Duration(milliseconds: 500));
-    return const ThermocycleSettings();
+  Future<Result<ThermocycleSettings>> loadSettings() async {
+    final result = await _simulatedAction();
+    switch (result) {
+      case Ok():
+        return const Result.ok(ThermocycleSettings());
+      case Error(error: final e):
+        return Result.error(e);
+    }
+  }
+
+  Future<Result<void>> _simulatedAction() async {
+    await Future.delayed(const Duration(milliseconds: 200));
+    return const Result.ok(null);
   }
 
   void _startSimulation() {

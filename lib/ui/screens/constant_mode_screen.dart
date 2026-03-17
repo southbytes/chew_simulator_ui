@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../viewmodels/constant_mode_view_model.dart';
 import '../../domain/models/models.dart';
+import '../../domain/commands/result.dart';
 import '../theme/app_theme.dart';
 
 class ConstantModeScreen extends StatelessWidget {
@@ -88,28 +89,112 @@ class ConstantModeScreen extends StatelessWidget {
                             ),
                             const SizedBox(height: 40),
                             if (!isRunning)
-                              ElevatedButton.icon(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppTheme.primaryColor,
-                                  foregroundColor: Colors.white,
-                                  minimumSize: const Size(double.infinity, 60),
-                                ),
-                                onPressed: viewModel.start,
-                                icon: const Icon(Icons.play_arrow),
-                                label: const Text('START CONSTANT MODE'),
+                              ListenableBuilder(
+                                listenable: viewModel.startCommand,
+                                builder: (context, _) {
+                                  return ElevatedButton.icon(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: AppTheme.primaryColor,
+                                      foregroundColor: Colors.white,
+                                      minimumSize: const Size(
+                                        double.infinity,
+                                        60,
+                                      ),
+                                    ),
+                                    onPressed: viewModel.startCommand.running
+                                        ? null
+                                        : () async {
+                                            final result = await viewModel
+                                                .start();
+                                            if (context.mounted) {
+                                              switch (result) {
+                                                case Ok():
+                                                  break;
+                                                case Error(error: final e):
+                                                  ScaffoldMessenger.of(
+                                                    context,
+                                                  ).showSnackBar(
+                                                    SnackBar(
+                                                      content: Text(
+                                                        'Error: $e',
+                                                      ),
+                                                    ),
+                                                  );
+                                                  break;
+                                              }
+                                            }
+                                          },
+                                    icon: viewModel.startCommand.running
+                                        ? const SizedBox(
+                                            height: 20,
+                                            width: 20,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                              valueColor:
+                                                  AlwaysStoppedAnimation<Color>(
+                                                    Colors.white,
+                                                  ),
+                                            ),
+                                          )
+                                        : const Icon(Icons.play_arrow),
+                                    label: const Text('START CONSTANT MODE'),
+                                  );
+                                },
                               )
                             else
-                              OutlinedButton.icon(
-                                style: OutlinedButton.styleFrom(
-                                  minimumSize: const Size(double.infinity, 60),
-                                  side: const BorderSide(
-                                    color: AppTheme.accentError,
-                                  ),
-                                  foregroundColor: AppTheme.accentError,
-                                ),
-                                onPressed: viewModel.stop,
-                                icon: const Icon(Icons.stop),
-                                label: const Text('STOP'),
+                              ListenableBuilder(
+                                listenable: viewModel.stopCommand,
+                                builder: (context, _) {
+                                  return OutlinedButton.icon(
+                                    style: OutlinedButton.styleFrom(
+                                      minimumSize: const Size(
+                                        double.infinity,
+                                        60,
+                                      ),
+                                      side: const BorderSide(
+                                        color: AppTheme.accentError,
+                                      ),
+                                      foregroundColor: AppTheme.accentError,
+                                    ),
+                                    onPressed: viewModel.stopCommand.running
+                                        ? null
+                                        : () async {
+                                            final result = await viewModel
+                                                .stop();
+                                            if (context.mounted) {
+                                              switch (result) {
+                                                case Ok():
+                                                  break;
+                                                case Error(error: final e):
+                                                  ScaffoldMessenger.of(
+                                                    context,
+                                                  ).showSnackBar(
+                                                    SnackBar(
+                                                      content: Text(
+                                                        'Error: $e',
+                                                      ),
+                                                    ),
+                                                  );
+                                                  break;
+                                              }
+                                            }
+                                          },
+                                    icon: viewModel.stopCommand.running
+                                        ? const SizedBox(
+                                            height: 20,
+                                            width: 20,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                              valueColor:
+                                                  AlwaysStoppedAnimation<Color>(
+                                                    AppTheme.accentError,
+                                                  ),
+                                            ),
+                                          )
+                                        : const Icon(Icons.stop),
+                                    label: const Text('STOP'),
+                                  );
+                                },
                               ),
                           ],
                         ),

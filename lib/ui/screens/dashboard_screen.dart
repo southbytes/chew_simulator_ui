@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../viewmodels/dashboard_view_model.dart';
 import '../../domain/models/models.dart';
+import '../../domain/commands/result.dart';
 import '../theme/app_theme.dart';
 
 class DashboardScreen extends StatelessWidget {
@@ -225,30 +226,67 @@ class DashboardScreen extends StatelessWidget {
   ) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('EMERGENCY STOP'),
-        content: const Text(
-          'Are you sure you want to trigger an immediate emergency stop?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('CANCEL'),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.accentError,
+      builder: (context) => ListenableBuilder(
+        listenable: viewModel.emergencyStopCommand,
+        builder: (context, _) {
+          return AlertDialog(
+            title: const Text('EMERGENCY STOP'),
+            content: const Text(
+              'Are you sure you want to trigger an immediate emergency stop?',
             ),
-            onPressed: () {
-              viewModel.emergencyStop();
-              Navigator.pop(context);
-            },
-            child: const Text(
-              'EMERGENCY STOP',
-              style: TextStyle(color: Colors.white),
-            ),
-          ),
-        ],
+            actions: [
+              TextButton(
+                onPressed: viewModel.emergencyStopCommand.running
+                    ? null
+                    : () => Navigator.pop(context),
+                child: const Text('CANCEL'),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.accentError,
+                ),
+                onPressed: viewModel.emergencyStopCommand.running
+                    ? null
+                    : () async {
+                        final result = await viewModel.emergencyStop();
+                        if (context.mounted) {
+                          switch (result) {
+                            case Ok():
+                              Navigator.pop(context);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Emergency Stop Engaged'),
+                                  backgroundColor: AppTheme.accentError,
+                                ),
+                              );
+                              break;
+                            case Error(error: final e):
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Failed to stop: $e')),
+                              );
+                              break;
+                          }
+                        }
+                      },
+                child: viewModel.emergencyStopCommand.running
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Colors.white,
+                          ),
+                        ),
+                      )
+                    : const Text(
+                        'EMERGENCY STOP',
+                        style: TextStyle(color: Colors.white),
+                      ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }

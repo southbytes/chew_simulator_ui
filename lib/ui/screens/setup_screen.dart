@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../viewmodels/setup_view_model.dart';
 import '../../domain/models/models.dart';
+import '../../domain/commands/result.dart';
 import '../theme/app_theme.dart';
 
 class SetupScreen extends StatelessWidget {
@@ -28,10 +29,25 @@ class SetupScreen extends StatelessWidget {
                   ),
                   Row(
                     children: [
-                      OutlinedButton.icon(
-                        onPressed: () {}, // Simulated load
-                        icon: const Icon(Icons.file_open),
-                        label: const Text('LOAD'),
+                      ListenableBuilder(
+                        listenable: viewModel.loadSettingsCommand,
+                        builder: (context, _) {
+                          return OutlinedButton.icon(
+                            onPressed: viewModel.loadSettingsCommand.running
+                                ? null
+                                : () => viewModel.loadSettingsCommand.execute(),
+                            icon: viewModel.loadSettingsCommand.running
+                                ? const SizedBox(
+                                    height: 16,
+                                    width: 16,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : const Icon(Icons.file_open),
+                            label: const Text('LOAD'),
+                          );
+                        },
                       ),
                       const SizedBox(width: 12),
                       OutlinedButton.icon(
@@ -40,14 +56,58 @@ class SetupScreen extends StatelessWidget {
                         label: const Text('RESET'),
                       ),
                       const SizedBox(width: 12),
-                      ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppTheme.primaryColor,
-                          foregroundColor: Colors.white,
-                        ),
-                        onPressed: viewModel.save,
-                        icon: const Icon(Icons.save),
-                        label: const Text('SAVE'),
+                      ListenableBuilder(
+                        listenable: viewModel.saveSettingsCommand,
+                        builder: (context, _) {
+                          return ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppTheme.primaryColor,
+                              foregroundColor: Colors.white,
+                            ),
+                            onPressed: viewModel.saveSettingsCommand.running
+                                ? null
+                                : () async {
+                                    final result = await viewModel.save();
+                                    if (context.mounted) {
+                                      switch (result) {
+                                        case Ok():
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
+                                            const SnackBar(
+                                              content: Text('Settings saved'),
+                                            ),
+                                          );
+                                          break;
+                                        case Error(error: final e):
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
+                                            SnackBar(
+                                              content: Text('Error: $e'),
+                                              backgroundColor:
+                                                  AppTheme.accentError,
+                                            ),
+                                          );
+                                          break;
+                                      }
+                                    }
+                                  },
+                            icon: viewModel.saveSettingsCommand.running
+                                ? const SizedBox(
+                                    height: 16,
+                                    width: 16,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        Colors.white,
+                                      ),
+                                    ),
+                                  )
+                                : const Icon(Icons.save),
+                            label: const Text('SAVE'),
+                          );
+                        },
                       ),
                     ],
                   ),
@@ -296,15 +356,33 @@ class SetupScreen extends StatelessWidget {
               '${settings.coldBathTemp}°C - ${settings.hotBathTemp}°C',
             ),
             const SizedBox(height: 32),
-            ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.primaryColor,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 20),
-              ),
-              onPressed: viewModel.start,
-              icon: const Icon(Icons.play_arrow),
-              label: const Text('START RUN NOW'),
+            ListenableBuilder(
+              listenable: viewModel.startCommand,
+              builder: (context, _) {
+                return ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.primaryColor,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 20),
+                  ),
+                  onPressed: viewModel.startCommand.running
+                      ? null
+                      : viewModel.start,
+                  icon: viewModel.startCommand.running
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.white,
+                            ),
+                          ),
+                        )
+                      : const Icon(Icons.play_arrow),
+                  label: const Text('START RUN NOW'),
+                );
+              },
             ),
           ],
         ),

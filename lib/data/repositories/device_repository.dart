@@ -1,16 +1,17 @@
+import '../../domain/commands/result.dart';
 import '../../domain/models/models.dart';
 
 abstract class DeviceRepository {
   Stream<DeviceStatus> get statusStream;
   DeviceStatus get currentStatus;
 
-  Future<void> startThermocycle(ThermocycleSettings settings);
-  Future<void> startConstantMode(ConstantModeSettings settings);
-  Future<void> pause();
-  Future<void> resume();
-  Future<void> stop();
-  Future<void> emergencyStop();
+  Future<Result<void>> startThermocycle(ThermocycleSettings settings);
+  Future<Result<void>> startConstantMode(ConstantModeSettings settings);
+  Future<Result<void>> pause();
+  Future<Result<void>> resume();
+  Future<Result<void>> stop();
+  Future<Result<void>> emergencyStop();
 
-  Future<void> saveSettings(ThermocycleSettings settings);
-  Future<ThermocycleSettings> loadSettings();
+  Future<Result<void>> saveSettings(ThermocycleSettings settings);
+  Future<Result<ThermocycleSettings>> loadSettings();
 }

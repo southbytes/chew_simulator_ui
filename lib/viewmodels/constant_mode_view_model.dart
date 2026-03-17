@@ -1,14 +1,21 @@
 import 'package:flutter/foundation.dart';
 import '../domain/models/models.dart';
 import '../data/repositories/device_repository.dart';
-import '../domain/commands/commands.dart';
+import '../domain/commands/command.dart';
+import '../domain/commands/result.dart';
 
 class ConstantModeViewModel extends ChangeNotifier {
   final DeviceRepository _repository;
   ConstantModeSettings _settings = const ConstantModeSettings();
   DeviceStatus _status = const DeviceStatus();
 
+  late final Command1<void, ConstantModeSettings> startCommand;
+  late final Command0<void> stopCommand;
+
   ConstantModeViewModel(this._repository) {
+    startCommand = Command1(_repository.startConstantMode);
+    stopCommand = Command0(_repository.stop);
+
     _status = _repository.currentStatus;
     _repository.statusStream.listen((status) {
       _status = status;
@@ -24,11 +31,29 @@ class ConstantModeViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  void start() {
-    StartConstantModeCommand(_repository, _settings).execute();
+  Future<Result<void>> start() async {
+    await startCommand.execute(_settings);
+    final result = startCommand.result!;
+    switch (result) {
+      case Ok():
+        notifyListeners();
+        return result;
+      case Error():
+        notifyListeners();
+        return result;
+    }
   }
 
-  void stop() {
-    StopCommand(_repository).execute();
+  Future<Result<void>> stop() async {
+    await stopCommand.execute();
+    final result = stopCommand.result!;
+    switch (result) {
+      case Ok():
+        notifyListeners();
+        return result;
+      case Error():
+        notifyListeners();
+        return result;
+    }
   }
 }
