@@ -304,12 +304,12 @@ class SetupScreen extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(label, style: const TextStyle(color: Colors.white70)),
-              Text(
-                '${value.toStringAsFixed(1)}$unit',
-                style: const TextStyle(
-                  color: AppTheme.primaryColor,
-                  fontWeight: FontWeight.bold,
-                ),
+              _EditableValue(
+                value: value,
+                min: min,
+                max: max,
+                unit: unit,
+                onChanged: onChanged,
               ),
             ],
           ),
@@ -353,7 +353,7 @@ class SetupScreen extends StatelessWidget {
             _buildSummaryItem('Total Cycles', '${settings.targetCycles}'),
             _buildSummaryItem(
               'Temp Range',
-              '${settings.coldBathTemp}°C - ${settings.hotBathTemp}°C',
+              '${settings.coldBathTemp.toStringAsFixed(1)}°C - ${settings.hotBathTemp.toStringAsFixed(1)}°C',
             ),
             const SizedBox(height: 32),
             ListenableBuilder(
@@ -420,6 +420,143 @@ class _PresetButton extends StatelessWidget {
       ),
       onPressed: onTap,
       child: Text(label, style: const TextStyle(fontSize: 12)),
+    );
+  }
+}
+
+class _EditableValue extends StatefulWidget {
+  final double value;
+  final double min;
+  final double max;
+  final String unit;
+  final ValueChanged<double> onChanged;
+
+  const _EditableValue({
+    required this.value,
+    required this.min,
+    required this.max,
+    required this.unit,
+    required this.onChanged,
+  });
+
+  @override
+  State<_EditableValue> createState() => _EditableValueState();
+}
+
+class _EditableValueState extends State<_EditableValue> {
+  late TextEditingController _controller;
+  bool _isEditing = false;
+  final _focusNode = FocusNode();
+
+  String get _formattedValue => widget.unit == '°C'
+      ? widget.value.toStringAsFixed(1)
+      : (widget.value % 1 == 0
+          ? widget.value.toInt().toString()
+          : widget.value.toStringAsFixed(1));
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: _formattedValue);
+    _focusNode.addListener(() {
+      if (!_focusNode.hasFocus) {
+        _submitValue();
+      }
+    });
+  }
+
+  @override
+  void didUpdateWidget(covariant _EditableValue oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!_isEditing && oldWidget.value != widget.value) {
+      _controller.text = _formattedValue;
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  void _submitValue() {
+    final parsed = double.tryParse(_controller.text);
+    if (parsed != null) {
+      final clamped = parsed.clamp(widget.min, widget.max);
+      widget.onChanged(clamped);
+      setState(() {
+        _isEditing = false;
+      });
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _controller.text = _formattedValue;
+        }
+      });
+    } else {
+      _controller.text = _formattedValue;
+      setState(() {
+        _isEditing = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isEditing) {
+      return SizedBox(
+        width: 80,
+        height: 24,
+        child: TextField(
+          controller: _controller,
+          focusNode: _focusNode,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          textAlign: TextAlign.right,
+          style: const TextStyle(
+            color: AppTheme.primaryColor,
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+          ),
+          decoration: InputDecoration(
+            contentPadding: EdgeInsets.zero,
+            isDense: true,
+            suffixText: widget.unit,
+            suffixStyle: const TextStyle(
+              color: AppTheme.primaryColor,
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+            ),
+            border: const UnderlineInputBorder(
+              borderSide: BorderSide(color: AppTheme.primaryColor),
+            ),
+          ),
+          onSubmitted: (_) => _submitValue(),
+        ),
+      );
+    }
+
+    return InkWell(
+      onTap: () {
+        setState(() {
+          _isEditing = true;
+        });
+        _focusNode.requestFocus();
+      },
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            '$_formattedValue${widget.unit}',
+            style: const TextStyle(
+              color: AppTheme.primaryColor,
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+            ),
+          ),
+          const SizedBox(width: 4),
+          const Icon(Icons.edit, size: 14, color: AppTheme.primaryColor),
+        ],
+      ),
     );
   }
 }
