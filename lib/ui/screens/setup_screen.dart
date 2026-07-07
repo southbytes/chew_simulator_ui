@@ -314,7 +314,7 @@ class SetupScreen extends StatelessWidget {
             ],
           ),
           Slider(
-            value: value,
+            value: value.clamp(min, max),
             min: min,
             max: max,
             activeColor: AppTheme.primaryColor,

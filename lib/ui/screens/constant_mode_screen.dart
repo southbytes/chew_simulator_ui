@@ -65,7 +65,7 @@ class ConstantModeScreen extends StatelessWidget {
                               ],
                             ),
                             Slider(
-                              value: settings.targetTemp,
+                              value: settings.targetTemp.clamp(20, 60),
                               min: 20,
                               max: 60,
                               onChanged: isRunning
