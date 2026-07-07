@@ -32,6 +32,12 @@ class ConstantModeViewModel extends ChangeNotifier {
   }
 
   Future<Result<void>> start() async {
+    _status = _status.copyWith(
+      state: DeviceState.running,
+      mode: OperationMode.constant,
+    );
+    notifyListeners();
+
     await startCommand.execute(_settings);
     final result = startCommand.result!;
     switch (result) {
@@ -39,12 +45,19 @@ class ConstantModeViewModel extends ChangeNotifier {
         notifyListeners();
         return result;
       case Error():
+        _status = _repository.currentStatus;
         notifyListeners();
         return result;
     }
   }
 
   Future<Result<void>> stop() async {
+    _status = _status.copyWith(
+      state: DeviceState.ready,
+      mode: OperationMode.idle,
+    );
+    notifyListeners();
+
     await stopCommand.execute();
     final result = stopCommand.result!;
     switch (result) {
@@ -52,6 +65,7 @@ class ConstantModeViewModel extends ChangeNotifier {
         notifyListeners();
         return result;
       case Error():
+        _status = _repository.currentStatus;
         notifyListeners();
         return result;
     }

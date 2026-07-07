@@ -33,7 +33,7 @@ class HomeScreen extends StatelessWidget {
                       builder: (context, _) {
                         return _ActionButton(
                           icon: Icons.play_arrow,
-                          label: 'START SIMULATION',
+                          label: 'START THERMOCYCLING',
                           color: AppTheme.accentReady,
                           onPressed: viewModel.startCommand.running
                               ? null

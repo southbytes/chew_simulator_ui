@@ -17,27 +17,32 @@ class DashboardScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final status = viewModel.status;
+    return ListenableBuilder(
+      listenable: viewModel,
+      builder: (context, _) {
+        final status = viewModel.status;
 
-    return Scaffold(
-      body: Row(
-        children: [
-          _buildSidebar(context),
-          Expanded(
-            child: Column(
-              children: [
-                _buildTopBar(context, status, viewModel),
-                Expanded(
-                  child: Container(
-                    padding: const EdgeInsets.all(24),
-                    child: child,
-                  ),
+        return Scaffold(
+          body: Row(
+            children: [
+              _buildSidebar(context),
+              Expanded(
+                child: Column(
+                  children: [
+                    _buildTopBar(context, status, viewModel),
+                    Expanded(
+                      child: Container(
+                        padding: const EdgeInsets.all(24),
+                        child: child,
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 

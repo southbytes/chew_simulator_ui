@@ -29,6 +29,12 @@ class HomeViewModel extends ChangeNotifier {
   DeviceStatus get status => _status;
 
   Future<Result<void>> start() async {
+    _status = _status.copyWith(
+      state: DeviceState.running,
+      mode: OperationMode.thermocycle,
+    );
+    notifyListeners();
+
     await startCommand.execute(const ThermocycleSettings());
     final result = startCommand.result!;
     switch (result) {
@@ -36,6 +42,7 @@ class HomeViewModel extends ChangeNotifier {
         notifyListeners();
         return result;
       case Error():
+        _status = _repository.currentStatus;
         notifyListeners();
         return result;
     }
@@ -43,6 +50,9 @@ class HomeViewModel extends ChangeNotifier {
 
   Future<Result<void>?> pauseResume() async {
     if (_status.state == DeviceState.running) {
+      _status = _status.copyWith(state: DeviceState.paused);
+      notifyListeners();
+
       await pauseCommand.execute();
       final result = pauseCommand.result!;
       switch (result) {
@@ -50,10 +60,14 @@ class HomeViewModel extends ChangeNotifier {
           notifyListeners();
           return result;
         case Error():
+          _status = _repository.currentStatus;
           notifyListeners();
           return result;
       }
     } else if (_status.state == DeviceState.paused) {
+      _status = _status.copyWith(state: DeviceState.running);
+      notifyListeners();
+
       await resumeCommand.execute();
       final result = resumeCommand.result!;
       switch (result) {
@@ -61,6 +75,7 @@ class HomeViewModel extends ChangeNotifier {
           notifyListeners();
           return result;
         case Error():
+          _status = _repository.currentStatus;
           notifyListeners();
           return result;
       }
@@ -69,6 +84,12 @@ class HomeViewModel extends ChangeNotifier {
   }
 
   Future<Result<void>> stop() async {
+    _status = _status.copyWith(
+      state: DeviceState.ready,
+      mode: OperationMode.idle,
+    );
+    notifyListeners();
+
     await stopCommand.execute();
     final result = stopCommand.result!;
     switch (result) {
@@ -76,6 +97,7 @@ class HomeViewModel extends ChangeNotifier {
         notifyListeners();
         return result;
       case Error():
+        _status = _repository.currentStatus;
         notifyListeners();
         return result;
     }
