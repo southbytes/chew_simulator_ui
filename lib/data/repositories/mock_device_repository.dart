@@ -8,6 +8,7 @@ class MockDeviceRepository implements DeviceRepository {
   DeviceStatus _currentStatus = const DeviceStatus();
   Timer? _timer;
   ThermocycleSettings? _currentSettings;
+  ConstantModeSettings? _constantSettings;
 
   MockDeviceRepository() {
     _statusController.add(_currentStatus);
@@ -21,18 +22,19 @@ class MockDeviceRepository implements DeviceRepository {
 
   @override
   Future<Result<void>> startThermocycle(ThermocycleSettings settings) async {
+    _currentSettings = settings;
+    _currentStatus = _currentStatus.copyWith(
+      state: DeviceState.running,
+      mode: OperationMode.thermocycle,
+      currentCycle: 0,
+      progress: 0.0,
+      remainingTime: settings.estimatedDuration,
+    );
+    _statusController.add(_currentStatus);
+
     final result = await _simulatedAction();
     switch (result) {
       case Ok():
-        _currentSettings = settings;
-        _currentStatus = _currentStatus.copyWith(
-          state: DeviceState.running,
-          mode: OperationMode.thermocycle,
-          currentCycle: 0,
-          progress: 0.0,
-          remainingTime: settings.estimatedDuration,
-        );
-        _statusController.add(_currentStatus);
         _startSimulation();
         return result;
       case Error():
@@ -42,18 +44,20 @@ class MockDeviceRepository implements DeviceRepository {
 
   @override
   Future<Result<void>> startConstantMode(ConstantModeSettings settings) async {
+    _constantSettings = settings;
+    _currentStatus = _currentStatus.copyWith(
+      state: DeviceState.running,
+      mode: OperationMode.constant,
+      progress: 0.0,
+      remainingTime: settings.isInfinite
+          ? Duration.zero
+          : settings.duration,
+    );
+    _statusController.add(_currentStatus);
+
     final result = await _simulatedAction();
     switch (result) {
       case Ok():
-        _currentStatus = _currentStatus.copyWith(
-          state: DeviceState.running,
-          mode: OperationMode.constant,
-          progress: 0.0,
-          remainingTime: settings.isInfinite
-              ? Duration.zero
-              : settings.duration,
-        );
-        _statusController.add(_currentStatus);
         _startSimulation();
         return result;
       case Error():
@@ -63,12 +67,13 @@ class MockDeviceRepository implements DeviceRepository {
 
   @override
   Future<Result<void>> pause() async {
+    _currentStatus = _currentStatus.copyWith(state: DeviceState.paused);
+    _statusController.add(_currentStatus);
+    _timer?.cancel();
+
     final result = await _simulatedAction();
     switch (result) {
       case Ok():
-        _currentStatus = _currentStatus.copyWith(state: DeviceState.paused);
-        _statusController.add(_currentStatus);
-        _timer?.cancel();
         return result;
       case Error():
         return result;
@@ -77,11 +82,12 @@ class MockDeviceRepository implements DeviceRepository {
 
   @override
   Future<Result<void>> resume() async {
+    _currentStatus = _currentStatus.copyWith(state: DeviceState.running);
+    _statusController.add(_currentStatus);
+
     final result = await _simulatedAction();
     switch (result) {
       case Ok():
-        _currentStatus = _currentStatus.copyWith(state: DeviceState.running);
-        _statusController.add(_currentStatus);
         _startSimulation();
         return result;
       case Error():
@@ -91,16 +97,17 @@ class MockDeviceRepository implements DeviceRepository {
 
   @override
   Future<Result<void>> stop() async {
+    _currentStatus = _currentStatus.copyWith(
+      state: DeviceState.ready,
+      mode: OperationMode.idle,
+      progress: 0.0,
+    );
+    _statusController.add(_currentStatus);
+    _timer?.cancel();
+
     final result = await _simulatedAction();
     switch (result) {
       case Ok():
-        _currentStatus = _currentStatus.copyWith(
-          state: DeviceState.ready,
-          mode: OperationMode.idle,
-          progress: 0.0,
-        );
-        _statusController.add(_currentStatus);
-        _timer?.cancel();
         return result;
       case Error():
         return result;
@@ -109,15 +116,16 @@ class MockDeviceRepository implements DeviceRepository {
 
   @override
   Future<Result<void>> emergencyStop() async {
+    _currentStatus = _currentStatus.copyWith(
+      state: DeviceState.error,
+      mode: OperationMode.idle,
+    );
+    _statusController.add(_currentStatus);
+    _timer?.cancel();
+
     final result = await _simulatedAction();
     switch (result) {
       case Ok():
-        _currentStatus = _currentStatus.copyWith(
-          state: DeviceState.error,
-          mode: OperationMode.idle,
-        );
-        _statusController.add(_currentStatus);
-        _timer?.cancel();
         return result;
       case Error():
         return result;
@@ -156,6 +164,39 @@ class MockDeviceRepository implements DeviceRepository {
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (_currentStatus.state != DeviceState.running) {
         timer.cancel();
+        return;
+      }
+
+      if (_currentStatus.mode == OperationMode.constant) {
+        double targetTemp = _constantSettings?.targetTemp ?? 37.0;
+        double nextChamber = _currentStatus.currentChamberTemp +
+            (targetTemp - _currentStatus.currentChamberTemp) * 0.1 +
+            (DateTime.now().second % 10 - 5) * 0.05; // noise
+
+        double nextProgress = _currentStatus.progress;
+        Duration nextRemaining = _currentStatus.remainingTime;
+        if (_constantSettings != null && !_constantSettings!.isInfinite) {
+          final totalSecs = _constantSettings!.duration.inSeconds;
+          if (totalSecs > 0) {
+            nextRemaining = _currentStatus.remainingTime > Duration.zero
+                ? _currentStatus.remainingTime - const Duration(seconds: 1)
+                : Duration.zero;
+            final elapsed = totalSecs - nextRemaining.inSeconds;
+            nextProgress = (elapsed / totalSecs).clamp(0.0, 1.0);
+
+            if (nextRemaining == Duration.zero) {
+              stop();
+              return;
+            }
+          }
+        }
+
+        _currentStatus = _currentStatus.copyWith(
+          currentChamberTemp: nextChamber,
+          progress: nextProgress,
+          remainingTime: nextRemaining,
+        );
+        _statusController.add(_currentStatus);
         return;
       }
 

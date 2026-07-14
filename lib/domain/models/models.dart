@@ -34,7 +34,7 @@ abstract class ConstantModeSettings with _$ConstantModeSettings {
   const factory ConstantModeSettings({
     @Default(37.0) double targetTemp,
     @Default(true) bool isInfinite,
-    @Default(Duration(hours: 24)) Duration duration,
+    @Default(Duration(hours: 0)) Duration duration,
   }) = _ConstantModeSettings;
 
   factory ConstantModeSettings.fromJson(Map<String, dynamic> json) =>

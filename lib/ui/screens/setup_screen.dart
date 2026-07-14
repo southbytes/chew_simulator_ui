@@ -4,17 +4,24 @@ import '../../domain/models/models.dart';
 import '../../domain/commands/result.dart';
 import '../theme/app_theme.dart';
 
-class SetupScreen extends StatelessWidget {
+class SetupScreen extends StatefulWidget {
   final SetupViewModel viewModel;
 
   const SetupScreen({super.key, required this.viewModel});
 
   @override
+  State<SetupScreen> createState() => _SetupScreenState();
+}
+
+class _SetupScreenState extends State<SetupScreen> {
+  int? _selectedPreset; // 0 = ISO Standard, 1 = 37°C Storage
+
+  @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
-      listenable: viewModel,
+      listenable: widget.viewModel,
       builder: (context, _) {
-        final settings = viewModel.settings;
+        final settings = widget.viewModel.settings;
 
         return SingleChildScrollView(
           child: Column(
@@ -30,13 +37,13 @@ class SetupScreen extends StatelessWidget {
                   Row(
                     children: [
                       ListenableBuilder(
-                        listenable: viewModel.loadSettingsCommand,
+                        listenable: widget.viewModel.loadSettingsCommand,
                         builder: (context, _) {
                           return OutlinedButton.icon(
-                            onPressed: viewModel.loadSettingsCommand.running
+                            onPressed: widget.viewModel.loadSettingsCommand.running
                                 ? null
-                                : () => viewModel.loadSettingsCommand.execute(),
-                            icon: viewModel.loadSettingsCommand.running
+                                : () => widget.viewModel.loadSettingsCommand.execute(),
+                            icon: widget.viewModel.loadSettingsCommand.running
                                 ? const SizedBox(
                                     height: 16,
                                     width: 16,
@@ -51,23 +58,26 @@ class SetupScreen extends StatelessWidget {
                       ),
                       const SizedBox(width: 12),
                       OutlinedButton.icon(
-                        onPressed: viewModel.resetToDefault,
+                        onPressed: () {
+                          widget.viewModel.resetToDefault();
+                          setState(() => _selectedPreset = null);
+                        },
                         icon: const Icon(Icons.refresh),
                         label: const Text('RESET'),
                       ),
                       const SizedBox(width: 12),
                       ListenableBuilder(
-                        listenable: viewModel.saveSettingsCommand,
+                        listenable: widget.viewModel.saveSettingsCommand,
                         builder: (context, _) {
                           return ElevatedButton.icon(
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppTheme.primaryColor,
                               foregroundColor: Colors.white,
                             ),
-                            onPressed: viewModel.saveSettingsCommand.running
+                            onPressed: widget.viewModel.saveSettingsCommand.running
                                 ? null
                                 : () async {
-                                    final result = await viewModel.save();
+                                    final result = await widget.viewModel.save();
                                     if (context.mounted) {
                                       switch (result) {
                                         case Ok():
@@ -93,7 +103,7 @@ class SetupScreen extends StatelessWidget {
                                       }
                                     }
                                   },
-                            icon: viewModel.saveSettingsCommand.running
+                            icon: widget.viewModel.saveSettingsCommand.running
                                 ? const SizedBox(
                                     height: 16,
                                     width: 16,
@@ -114,7 +124,7 @@ class SetupScreen extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 16),
-              _buildPresets(viewModel),
+              _buildPresets(widget.viewModel, settings),
               const SizedBox(height: 32),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -127,7 +137,7 @@ class SetupScreen extends StatelessWidget {
                         settings.coldBathTemp,
                         0,
                         20,
-                        (v) => viewModel.updateSettings(
+                        (v) => widget.viewModel.updateSettings(
                           settings.copyWith(coldBathTemp: v),
                         ),
                         '°C',
@@ -138,7 +148,7 @@ class SetupScreen extends StatelessWidget {
                         settings.hotBathTemp,
                         40,
                         95,
-                        (v) => viewModel.updateSettings(
+                        (v) => widget.viewModel.updateSettings(
                           settings.copyWith(hotBathTemp: v),
                         ),
                         '°C',
@@ -149,7 +159,7 @@ class SetupScreen extends StatelessWidget {
                         settings.temperatureTolerance,
                         0.1,
                         5.0,
-                        (v) => viewModel.updateSettings(
+                        (v) => widget.viewModel.updateSettings(
                           settings.copyWith(temperatureTolerance: v),
                         ),
                         '°C',
@@ -165,7 +175,7 @@ class SetupScreen extends StatelessWidget {
                         settings.dwellTimeSeconds.toDouble(),
                         1,
                         300,
-                        (v) => viewModel.updateSettings(
+                        (v) => widget.viewModel.updateSettings(
                           settings.copyWith(dwellTimeSeconds: v.toInt()),
                         ),
                         's',
@@ -176,7 +186,7 @@ class SetupScreen extends StatelessWidget {
                         settings.transferTimeSeconds.toDouble(),
                         1,
                         60,
-                        (v) => viewModel.updateSettings(
+                        (v) => widget.viewModel.updateSettings(
                           settings.copyWith(transferTimeSeconds: v.toInt()),
                         ),
                         's',
@@ -187,7 +197,7 @@ class SetupScreen extends StatelessWidget {
                         settings.drainingTimeSeconds.toDouble(),
                         0,
                         60,
-                        (v) => viewModel.updateSettings(
+                        (v) => widget.viewModel.updateSettings(
                           settings.copyWith(drainingTimeSeconds: v.toInt()),
                         ),
                         's',
@@ -208,7 +218,7 @@ class SetupScreen extends StatelessWidget {
                         settings.targetCycles.toDouble(),
                         1,
                         10000,
-                        (v) => viewModel.updateSettings(
+                        (v) => widget.viewModel.updateSettings(
                           settings.copyWith(targetCycles: v.toInt()),
                         ),
                         '',
@@ -217,7 +227,7 @@ class SetupScreen extends StatelessWidget {
                   ),
                   const SizedBox(width: 24),
                   Expanded(
-                    child: _buildSummaryCard(context, settings, viewModel),
+                    child: _buildSummaryCard(context, settings, widget.viewModel),
                   ),
                 ],
               ),
@@ -228,7 +238,7 @@ class SetupScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildPresets(SetupViewModel viewModel) {
+  Widget _buildPresets(SetupViewModel viewModel, ThermocycleSettings settings) {
     return Row(
       children: [
         const Text(
@@ -242,25 +252,33 @@ class SetupScreen extends StatelessWidget {
         const SizedBox(width: 8),
         _PresetButton(
           label: 'ISO Standard 5–55°C',
-          onTap: () => viewModel.updateSettings(
-            const ThermocycleSettings(
-              coldBathTemp: 5,
-              hotBathTemp: 55,
-              targetCycles: 10000,
-            ),
-          ),
+          isSelected: _selectedPreset == 0,
+          onTap: () {
+            viewModel.updateSettings(
+              const ThermocycleSettings(
+                coldBathTemp: 5,
+                hotBathTemp: 55,
+                targetCycles: 10000,
+              ),
+            );
+            setState(() => _selectedPreset = 0);
+          },
         ),
         const SizedBox(width: 12),
         _PresetButton(
           label: '37°C Storage Pre-set',
-          onTap: () => viewModel.updateSettings(
-            const ThermocycleSettings(
-              coldBathTemp: 37,
-              hotBathTemp: 37,
-              dwellTimeSeconds: 3600,
-              targetCycles: 24,
-            ),
-          ),
+          isSelected: _selectedPreset == 1,
+          onTap: () {
+            viewModel.updateSettings(
+              const ThermocycleSettings(
+                coldBathTemp: 37,
+                hotBathTemp: 37,
+                dwellTimeSeconds: 3600,
+                targetCycles: 24,
+              ),
+            );
+            setState(() => _selectedPreset = 1);
+          },
         ),
       ],
     );
@@ -407,19 +425,60 @@ class SetupScreen extends StatelessWidget {
 class _PresetButton extends StatelessWidget {
   final String label;
   final VoidCallback onTap;
+  final bool isSelected;
 
-  const _PresetButton({required this.label, required this.onTap});
+  const _PresetButton({
+    required this.label,
+    required this.onTap,
+    this.isSelected = false,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return OutlinedButton(
-      style: OutlinedButton.styleFrom(
-        foregroundColor: Colors.white70,
-        side: const BorderSide(color: Colors.white10),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      decoration: isSelected
+          ? BoxDecoration(
+              borderRadius: BorderRadius.circular(8),
+              boxShadow: [
+                BoxShadow(
+                  color: AppTheme.primaryColor.withValues(alpha: 0.4),
+                  blurRadius: 10,
+                  spreadRadius: 1,
+                ),
+              ],
+            )
+          : null,
+      child: OutlinedButton(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: isSelected ? Colors.white : Colors.white70,
+          backgroundColor: isSelected
+              ? AppTheme.primaryColor.withValues(alpha: 0.2)
+              : Colors.transparent,
+          side: BorderSide(
+            color: isSelected ? AppTheme.primaryColor : Colors.white10,
+            width: isSelected ? 1.5 : 1.0,
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        ),
+        onPressed: onTap,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (isSelected) ...[
+              Icon(Icons.check_circle, size: 14, color: AppTheme.primaryColor),
+              const SizedBox(width: 6),
+            ],
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              ),
+            ),
+          ],
+        ),
       ),
-      onPressed: onTap,
-      child: Text(label, style: const TextStyle(fontSize: 12)),
     );
   }
 }

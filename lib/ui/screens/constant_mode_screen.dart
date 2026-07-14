@@ -75,6 +75,39 @@ class ConstantModeScreen extends StatelessWidget {
                                     ),
                             ),
                             const SizedBox(height: 24),
+
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Text(
+                                  'Duration ',
+                                  style: TextStyle(fontSize: 18),
+                                ),
+                                Text(
+                                    settings.isInfinite ? '' : '${settings.duration.toString().split('.').first} hrs',
+                                  style: const TextStyle(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppTheme.primaryColor,
+                                  ),
+                                ),
+                              ],
+                            ),
+
+                            Slider(
+                              value: settings.duration.inHours.toDouble().clamp(0.0, 24.0),
+                              min: 0,
+                              max: 24,
+                              onChanged: (isRunning || settings.isInfinite)
+                                  ? null
+                                  : (v) => viewModel.updateSettings(
+                                        settings.copyWith(
+                                          duration: Duration(hours: v.round()),
+                                        ),
+                                      ),
+                            ),
+                            const SizedBox(height: 24),
+
                             SwitchListTile(
                               title: const Text('Infinite Hold'),
                               subtitle: const Text(
@@ -205,8 +238,9 @@ class ConstantModeScreen extends StatelessWidget {
                   Expanded(
                     child: Column(
                       children: [
+                        const SizedBox(height: 68),
                         _buildStatusCard(context, status),
-                        const SizedBox(height: 24),
+                        const SizedBox(height: 48),
                         _buildStabilityIndicator(context, status),
                       ],
                     ),

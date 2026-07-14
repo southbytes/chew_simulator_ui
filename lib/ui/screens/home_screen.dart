@@ -31,11 +31,12 @@ class HomeScreen extends StatelessWidget {
                     child: ListenableBuilder(
                       listenable: viewModel.startCommand,
                       builder: (context, _) {
+                        final isBusy = viewModel.startCommand.running || status.state == DeviceState.running;
                         return _ActionButton(
                           icon: Icons.play_arrow,
                           label: 'START THERMOCYCLING',
                           color: AppTheme.accentReady,
-                          onPressed: viewModel.startCommand.running
+                          onPressed: isBusy
                               ? null
                               : () async {
                                   final result = await viewModel.start();
@@ -69,6 +70,7 @@ class HomeScreen extends StatelessWidget {
                         final isRunning =
                             viewModel.pauseCommand.running ||
                             viewModel.resumeCommand.running;
+                        final cannotPause = isRunning || status.mode != OperationMode.thermocycle;
                         return _ActionButton(
                           icon: status.state == DeviceState.paused
                               ? Icons.play_circle_outline
@@ -77,7 +79,7 @@ class HomeScreen extends StatelessWidget {
                               ? 'RESUME'
                               : 'PAUSE',
                           color: AppTheme.accentWarning,
-                          onPressed: isRunning ? null : viewModel.pauseResume,
+                          onPressed: cannotPause ? null : viewModel.pauseResume,
                           isLoading: isRunning,
                         );
                       },
@@ -88,11 +90,12 @@ class HomeScreen extends StatelessWidget {
                     child: ListenableBuilder(
                       listenable: viewModel.stopCommand,
                       builder: (context, _) {
+                        final cannotStop = viewModel.stopCommand.running || status.mode != OperationMode.thermocycle;
                         return _ActionButton(
                           icon: Icons.stop_circle_outlined,
                           label: 'STOP',
                           color: AppTheme.accentError,
-                          onPressed: viewModel.stopCommand.running
+                          onPressed: cannotStop
                               ? null
                               : viewModel.stop,
                           isLoading: viewModel.stopCommand.running,
@@ -197,6 +200,39 @@ class HomeScreen extends StatelessWidget {
   }
 
   Widget _buildProgressCard(BuildContext context, DeviceStatus status) {
+    if (status.mode == OperationMode.constant) {
+      return const Card(
+        child: Padding(
+          padding: EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Run Progress',
+                style: TextStyle(
+                  color: Colors.white54,
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 48),
+              Center(
+                child: Text(
+                  '37°C Constant Mode Active',
+                  style: TextStyle(
+                    color: AppTheme.primaryColor,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+              ),
+              SizedBox(height: 48),
+            ],
+          ),
+        ),
+      );
+    }
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(24),
@@ -275,6 +311,39 @@ class HomeScreen extends StatelessWidget {
     HomeViewModel viewModel,
     DeviceStatus status,
   ) {
+    if (status.mode == OperationMode.constant) {
+      return const Card(
+        child: Padding(
+          padding: EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                'Controls',
+                style: TextStyle(
+                  color: Colors.white54,
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 40),
+              Center(
+                child: Text(
+                  'Constant Mode Active\n\nControl operations via the\n37°C Constant Mode tab.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.white54,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+              SizedBox(height: 40),
+            ],
+          ),
+        ),
+      );
+    }
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(24),

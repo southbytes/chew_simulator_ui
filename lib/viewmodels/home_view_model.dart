@@ -29,6 +29,12 @@ class HomeViewModel extends ChangeNotifier {
   DeviceStatus get status => _status;
 
   Future<Result<void>> start() async {
+    // Do not start thermocycling if device is already in use or in constant mode
+    if (_status.state == DeviceState.running ||
+        _status.mode == OperationMode.constant) {
+      return const Result.ok(null);
+    }
+
     _status = _status.copyWith(
       state: DeviceState.running,
       mode: OperationMode.thermocycle,

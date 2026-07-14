@@ -55,15 +55,26 @@ class SetupViewModel extends ChangeNotifier {
   }
 
   Future<Result<void>> start() async {
-    await startCommand.execute(_settings);
-    final result = startCommand.result!;
-    switch (result) {
-      case Ok():
-        notifyListeners();
-        return result;
-      case Error():
-        notifyListeners();
-        return result;
+    if (_settings.coldBathTemp == 37.0 && _settings.hotBathTemp == 37.0) {
+      final constantSettings = ConstantModeSettings(
+        targetTemp: 37.0,
+        isInfinite: false,
+        duration: Duration(seconds: _settings.dwellTimeSeconds * _settings.targetCycles),
+      );
+      final result = await _repository.startConstantMode(constantSettings);
+      notifyListeners();
+      return result;
+    } else {
+      await startCommand.execute(_settings);
+      final result = startCommand.result!;
+      switch (result) {
+        case Ok():
+          notifyListeners();
+          return result;
+        case Error():
+          notifyListeners();
+          return result;
+      }
     }
   }
 

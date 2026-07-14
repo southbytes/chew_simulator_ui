@@ -146,11 +146,13 @@ class DashboardScreen extends StatelessWidget {
     }
 
     return Container(
-      height: 80,
+      height: 100,
       padding: const EdgeInsets.symmetric(horizontal: 32),
       decoration: const BoxDecoration(
         color: AppTheme.darkBg,
-        border: Border(bottom: BorderSide(color: Colors.white10, width: 1)),
+        // border: Border(top: BorderSide(color: Colors.purple, width: 10), bottom: BorderSide(color: Colors.purple, width: 10)),
+        // border: Border(top: BorderSide(color: Colors.white38, width: 10), bottom: BorderSide(color: Colors.white38, width: 8)),
+        border: Border(bottom: BorderSide(color: Colors.white38, width: 8)),
       ),
       child: Row(
         children: [
@@ -171,30 +173,31 @@ class DashboardScreen extends StatelessWidget {
             status.mode == OperationMode.thermocycle
                 ? 'Thermocycle'
                 : status.mode == OperationMode.constant
-                ? '37°C Hold'
+                ? '37°C Constant'
                 : 'Idle',
           ),
           const SizedBox(width: 40),
           _buildInfoItem(
             context,
-            'COLD',
-            '${status.currentColdBathTemp.toStringAsFixed(1)}°C',
-          ),
-          const SizedBox(width: 40),
-          _buildInfoItem(
-            context,
-            'HOT',
-            '${status.currentHotBathTemp.toStringAsFixed(1)}°C',
+            'CHAMBER',
+            '${status.currentChamberTemp.toStringAsFixed(1)}°C',
           ),
           const SizedBox(width: 40),
           if (status.mode == OperationMode.thermocycle)
             _buildInfoItem(context, 'CYCLE', '${status.currentCycle}'),
           const Spacer(),
           IconButton(
-            icon: const Icon(
-              Icons.report_problem,
-              color: AppTheme.accentError,
-              size: 32,
+            // icon: const Icon(
+            //   Icons.emergency,//.report_problem,
+            //   color: AppTheme.accentError,
+            //   size: 32,
+            // ),
+            padding: EdgeInsets.zero, // Removes default 8.0 padding
+            constraints: const BoxConstraints(), // Clears the minimum 48x48 size rule
+            icon: Image.asset(
+              'assets/images/emergency-stop-1.png',
+              width: 50, // Set your exact desired width here
+              height: 50, // Set your exact desired height here
             ),
             onPressed: () => _showEmergencyDialog(context, viewModel),
             tooltip: 'Emergency Stop',
