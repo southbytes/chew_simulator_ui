@@ -102,7 +102,7 @@ class ConstantModeScreen extends StatelessWidget {
                                   ? null
                                   : (v) => viewModel.updateSettings(
                                         settings.copyWith(
-                                          duration: Duration(hours: v.round()),
+                                          duration: Duration(hours: v.toInt(), minutes: ((v - v.toInt()) * 60).round()),
                                         ),
                                       ),
                             ),
@@ -238,10 +238,49 @@ class ConstantModeScreen extends StatelessWidget {
                   Expanded(
                     child: Column(
                       children: [
-                        const SizedBox(height: 68),
+                        // const SizedBox(height: 68),
                         _buildStatusCard(context, status),
                         const SizedBox(height: 48),
                         _buildStabilityIndicator(context, status),
+
+
+                        const SizedBox(height: 48),
+                        SwitchListTile(
+                          title: const Text('Timer On/Off'),
+                          subtitle: const Text(
+                            'Track elapsed time in constant mode',
+                          ),
+                          value: viewModel.timerEnabled,
+                          onChanged: (v) => viewModel.setTimerEnabled(v),
+                        ),
+                        if (viewModel.timerEnabled || viewModel.elapsedTime != Duration.zero) ...[
+                          const SizedBox(height: 16),
+                          Center(
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 24,
+                                vertical: 12,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppTheme.primaryColor.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: AppTheme.primaryColor.withValues(alpha: 0.3),
+                                ),
+                              ),
+                              child: Text(
+                                _formatDuration(viewModel.elapsedTime),
+                                style: const TextStyle(
+                                  fontSize: 36,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppTheme.primaryColor,
+                                  fontFamily: 'monospace',
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+
                       ],
                     ),
                   ),
@@ -304,5 +343,13 @@ class ConstantModeScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String _formatDuration(Duration duration) {
+    String twoDigits(int n) => n.toString().padLeft(2, '0');
+    final hours = twoDigits(duration.inHours);
+    final minutes = twoDigits(duration.inMinutes.remainder(60));
+    final seconds = twoDigits(duration.inSeconds.remainder(60));
+    return '$hours:$minutes:$seconds';
   }
 }

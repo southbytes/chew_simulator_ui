@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import '../domain/models/models.dart';
 import '../data/repositories/device_repository.dart';
@@ -8,6 +9,10 @@ class ConstantModeViewModel extends ChangeNotifier {
   final DeviceRepository _repository;
   ConstantModeSettings _settings = const ConstantModeSettings();
   DeviceStatus _status = const DeviceStatus();
+
+  bool _timerEnabled = false;
+  Duration _elapsedTime = Duration.zero;
+  Timer? _timer;
 
   late final Command1<void, ConstantModeSettings> startCommand;
   late final Command0<void> stopCommand;
@@ -23,6 +28,31 @@ class ConstantModeViewModel extends ChangeNotifier {
     });
   }
 
+  bool get timerEnabled => _timerEnabled;
+  Duration get elapsedTime => _elapsedTime;
+
+  void setTimerEnabled(bool enabled) {
+    if (_timerEnabled == enabled) return;
+    _timerEnabled = enabled;
+    if (_timerEnabled) {
+      _timer?.cancel();
+      _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+        _elapsedTime += const Duration(seconds: 1);
+        notifyListeners();
+      });
+    } else {
+      _timer?.cancel();
+      _timer = null;
+    }
+    notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
   ConstantModeSettings get settings => _settings;
   DeviceStatus get status => _status;
 
@@ -32,6 +62,7 @@ class ConstantModeViewModel extends ChangeNotifier {
   }
 
   Future<Result<void>> start() async {
+    _elapsedTime = Duration.zero;
     _status = _status.copyWith(
       state: DeviceState.running,
       mode: OperationMode.constant,
