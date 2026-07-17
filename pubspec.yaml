@@ -22,14 +22,15 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  cupertino_icons: ^1.0.9
   flutter_lints: ^6.0.0
   build_runner: ^2.12.1
   freezed: ^3.2.5
   json_serializable: ^6.13.0
 
 flutter:
+  uses-material-design: true
+
   assets:
     - assets/
     - assets/images/
-
-  uses-material-design: true

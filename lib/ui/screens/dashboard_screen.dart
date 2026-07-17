@@ -152,7 +152,7 @@ class DashboardScreen extends StatelessWidget {
         color: AppTheme.darkBg,
         // border: Border(top: BorderSide(color: Colors.purple, width: 10), bottom: BorderSide(color: Colors.purple, width: 10)),
         // border: Border(top: BorderSide(color: Colors.white38, width: 10), bottom: BorderSide(color: Colors.white38, width: 8)),
-        border: Border(bottom: BorderSide(color: Colors.white38, width: 8)),
+        border: Border(bottom: BorderSide(color: Colors.purple, width: 8)),
       ),
       child: Row(
         children: [
@@ -195,7 +195,7 @@ class DashboardScreen extends StatelessWidget {
             padding: EdgeInsets.zero, // Removes default 8.0 padding
             constraints: const BoxConstraints(), // Clears the minimum 48x48 size rule
             icon: Image.asset(
-              'assets/images/emergency-stop-1.png',
+              'assets/images/emergency-stop-3.png',
               width: 50, // Set your exact desired width here
               height: 50, // Set your exact desired height here
             ),

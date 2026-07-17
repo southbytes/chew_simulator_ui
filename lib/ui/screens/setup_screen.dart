@@ -273,8 +273,9 @@ class _SetupScreenState extends State<SetupScreen> {
               const ThermocycleSettings(
                 coldBathTemp: 37,
                 hotBathTemp: 37,
-                dwellTimeSeconds: 3600,
-                targetCycles: 24,
+                dwellTimeSeconds: 0,
+                transferTimeSeconds: 0,
+                targetCycles: 0,
               ),
             );
             setState(() => _selectedPreset = 1);
