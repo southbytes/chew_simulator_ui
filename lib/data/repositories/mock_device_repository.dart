@@ -2,6 +2,7 @@ import 'dart:async';
 import '../../domain/commands/result.dart';
 import '../../domain/models/models.dart';
 import 'device_repository.dart';
+import 'modbus_addresses.dart';
 
 class MockDeviceRepository implements DeviceRepository {
   final _statusController = StreamController<DeviceStatus>.broadcast();
@@ -9,6 +10,7 @@ class MockDeviceRepository implements DeviceRepository {
   Timer? _timer;
   ThermocycleSettings? _currentSettings;
   ConstantModeSettings? _constantSettings;
+  final _modbusReader = ModbusReader();
 
   MockDeviceRepository() {
     _statusController.add(_currentStatus);
@@ -191,8 +193,23 @@ class MockDeviceRepository implements DeviceRepository {
           }
         }
 
+        final chamber1 = _modbusReader.readFloat32FromMockDevice(ModbusAddresses.chamber1Temp, baseValue: nextChamber);
+        final chamber2 = _modbusReader.readFloat32FromMockDevice(ModbusAddresses.chamber2Temp, baseValue: nextChamber);
+        final chamber3 = _modbusReader.readFloat32FromMockDevice(ModbusAddresses.chamber3Temp, baseValue: nextChamber);
+        final chamber4 = _modbusReader.readFloat32FromMockDevice(ModbusAddresses.chamber4Temp, baseValue: nextChamber);
+        final watchdog = _modbusReader.readBooleanFromMockDevice(ModbusAddresses.watchdogStatus);
+        final level = _modbusReader.readFloat32FromMockDevice(ModbusAddresses.levelSensor);
+        final hits = _modbusReader.readUint16FromMockDevice(ModbusAddresses.hitCount, currentValue: _currentStatus.hitCount);
+
         _currentStatus = _currentStatus.copyWith(
           currentChamberTemp: nextChamber,
+          currentChamber1Temp: chamber1,
+          currentChamber2Temp: chamber2,
+          currentChamber3Temp: chamber3,
+          currentChamber4Temp: chamber4,
+          watchdogStatus: watchdog,
+          levelSensor: level,
+          hitCount: hits,
           progress: nextProgress,
           remainingTime: nextRemaining,
         );
@@ -225,10 +242,25 @@ class MockDeviceRepository implements DeviceRepository {
           (nextCold + nextHot) / 2 +
           (DateTime.now().second % 10 - 5) * 0.5; // Add some noise
 
+      final chamber1 = _modbusReader.readFloat32FromMockDevice(ModbusAddresses.chamber1Temp, baseValue: nextChamber);
+      final chamber2 = _modbusReader.readFloat32FromMockDevice(ModbusAddresses.chamber2Temp, baseValue: nextChamber);
+      final chamber3 = _modbusReader.readFloat32FromMockDevice(ModbusAddresses.chamber3Temp, baseValue: nextChamber);
+      final chamber4 = _modbusReader.readFloat32FromMockDevice(ModbusAddresses.chamber4Temp, baseValue: nextChamber);
+      final watchdog = _modbusReader.readBooleanFromMockDevice(ModbusAddresses.watchdogStatus);
+      final level = _modbusReader.readFloat32FromMockDevice(ModbusAddresses.levelSensor);
+      final hits = _modbusReader.readUint16FromMockDevice(ModbusAddresses.hitCount, currentValue: _currentStatus.hitCount);
+
       _currentStatus = _currentStatus.copyWith(
         currentColdBathTemp: nextCold,
         currentHotBathTemp: nextHot,
         currentChamberTemp: nextChamber,
+        currentChamber1Temp: chamber1,
+        currentChamber2Temp: chamber2,
+        currentChamber3Temp: chamber3,
+        currentChamber4Temp: chamber4,
+        watchdogStatus: watchdog,
+        levelSensor: level,
+        hitCount: hits,
         currentCycle: nextCycle,
         progress: nextProgress.clamp(0.0, 1.0),
         remainingTime: _currentStatus.remainingTime > Duration.zero

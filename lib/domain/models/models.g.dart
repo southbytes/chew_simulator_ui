@@ -36,7 +36,7 @@ _ConstantModeSettings _$ConstantModeSettingsFromJson(
   targetTemp: (json['targetTemp'] as num?)?.toDouble() ?? 37.0,
   isInfinite: json['isInfinite'] as bool? ?? true,
   duration: json['duration'] == null
-      ? const Duration(hours: 24)
+      ? const Duration(hours: 0)
       : Duration(microseconds: (json['duration'] as num).toInt()),
 );
 

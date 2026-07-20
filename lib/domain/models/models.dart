@@ -55,9 +55,22 @@ abstract class DeviceStatus with _$DeviceStatus {
     @Default(0.0) double currentColdBathTemp,
     @Default(0.0) double currentHotBathTemp,
     @Default(0.0) double currentChamberTemp,
+    @Default(0.0) double currentChamber1Temp,
+    @Default(0.0) double currentChamber2Temp,
+    @Default(0.0) double currentChamber3Temp,
+    @Default(0.0) double currentChamber4Temp,
     @Default(0) int currentCycle,
     @Default(Duration.zero) Duration remainingTime,
     @Default(0.0) double progress, // 0.0 to 1.0
+    @Default(false) bool watchdogStatus,
+    @Default(0.0) double levelSensor,
+    @Default(0) int hitCount,
+    @Default(0) int p1Pulse,
+    @Default(0) int p2Pulse,
+    @Default(false) bool hotFillValve,
+    @Default(false) bool hotDrainValve,
+    @Default(false) bool coldFillValve,
+    @Default(false) bool coldDrainValve,
   }) = _DeviceStatus;
 
   const DeviceStatus._();
