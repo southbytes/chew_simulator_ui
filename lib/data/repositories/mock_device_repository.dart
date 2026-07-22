@@ -270,4 +270,53 @@ class MockDeviceRepository implements DeviceRepository {
       _statusController.add(_currentStatus);
     });
   }
+
+  @override
+  Future<Result<void>> setPump1Pulse(int pulse) async {
+    _currentStatus = _currentStatus.copyWith(p1Pulse: pulse.clamp(0, 1000));
+    _statusController.add(_currentStatus);
+    return await _simulatedAction();
+  }
+
+  @override
+  Future<Result<void>> setPump2Pulse(int pulse) async {
+    _currentStatus = _currentStatus.copyWith(p2Pulse: pulse.clamp(0, 1000));
+    _statusController.add(_currentStatus);
+    return await _simulatedAction();
+  }
+
+  @override
+  Future<Result<void>> setHotFillValve(bool open) async {
+    _currentStatus = _currentStatus.copyWith(hotFillValve: open);
+    _statusController.add(_currentStatus);
+    return await _simulatedAction();
+  }
+
+  @override
+  Future<Result<void>> setHotDrainValve(bool open) async {
+    _currentStatus = _currentStatus.copyWith(hotDrainValve: open);
+    _statusController.add(_currentStatus);
+    return await _simulatedAction();
+  }
+
+  @override
+  Future<Result<void>> setColdFillValve(bool open) async {
+    _currentStatus = _currentStatus.copyWith(coldFillValve: open);
+    _statusController.add(_currentStatus);
+    return await _simulatedAction();
+  }
+
+  @override
+  Future<Result<void>> setColdDrainValve(bool open) async {
+    _currentStatus = _currentStatus.copyWith(coldDrainValve: open);
+    _statusController.add(_currentStatus);
+    return await _simulatedAction();
+  }
+
+  @override
+  Future<Result<void>> resetHitCount() async {
+    _currentStatus = _currentStatus.copyWith(hitCount: 0);
+    _statusController.add(_currentStatus);
+    return await _simulatedAction();
+  }
 }

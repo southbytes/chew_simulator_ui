@@ -14,4 +14,13 @@ abstract class DeviceRepository {
 
   Future<Result<void>> saveSettings(ThermocycleSettings settings);
   Future<Result<ThermocycleSettings>> loadSettings();
+
+  // Actuator write methods
+  Future<Result<void>> setPump1Pulse(int pulse);
+  Future<Result<void>> setPump2Pulse(int pulse);
+  Future<Result<void>> setHotFillValve(bool open);
+  Future<Result<void>> setHotDrainValve(bool open);
+  Future<Result<void>> setColdFillValve(bool open);
+  Future<Result<void>> setColdDrainValve(bool open);
+  Future<Result<void>> resetHitCount();
 }
