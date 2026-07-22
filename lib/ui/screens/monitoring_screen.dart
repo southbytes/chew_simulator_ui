@@ -18,9 +18,36 @@ class MonitoringScreen extends StatelessWidget {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Real-time Monitoring',
-              style: Theme.of(context).textTheme.displayLarge,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Real-time Monitoring',
+                  style: Theme.of(context).textTheme.displayLarge,
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: AppTheme.primaryColor.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: AppTheme.primaryColor.withValues(alpha: 0.5)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.touch_app, color: AppTheme.primaryColor, size: 20),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Hits: ${viewModel.status.hitCount}',
+                        style: const TextStyle(
+                          color: AppTheme.primaryColor,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 32),
             Expanded(
