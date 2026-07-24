@@ -114,7 +114,7 @@ class MonitoringScreen extends StatelessWidget {
                                         interval: 20,
                                         getTitlesWidget: (value, meta) {
                                           return Text(
-                                            '${value.toInt()}°',
+                                            '${value.toStringAsFixed(1)}°',
                                             style: const TextStyle(
                                               color: Colors.white24,
                                               fontSize: 12,
@@ -140,7 +140,7 @@ class MonitoringScreen extends StatelessWidget {
                                           .toList(),
                                       isCurved: true,
                                       color: AppTheme.primaryColor,
-                                      barWidth: 4,
+                                       barWidth: 3,
                                       isStrokeCapRound: true,
                                       dotData: const FlDotData(show: false),
                                       belowBarData: BarAreaData(
@@ -149,6 +149,25 @@ class MonitoringScreen extends StatelessWidget {
                                       ),
                                     ),
                                   ],
+                                  lineTouchData: LineTouchData(
+                                    enabled: true,
+                                    touchTooltipData: LineTouchTooltipData(
+                                      getTooltipItems: (List<LineBarSpot> lineBarsSpot) {
+                                        return lineBarsSpot.map((lineBarSpot) {
+                                          return LineTooltipItem(
+                                            '${lineBarSpot.y.toStringAsFixed(1)}°C',
+                                            const TextStyle(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 12,
+                                            ),
+                                          );
+                                        }).toList();
+                                      },
+                                      fitInsideHorizontally: true,
+                                      fitInsideVertically: true,
+                                    ),
+                                  ),
                                 ),
                               ),
                       ),
