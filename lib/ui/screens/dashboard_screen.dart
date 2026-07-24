@@ -146,27 +146,26 @@ class DashboardScreen extends StatelessWidget {
     }
 
     return Container(
-      height: 100,
+      height: 140,
       padding: const EdgeInsets.symmetric(horizontal: 32),
       decoration: const BoxDecoration(
         color: AppTheme.darkBg,
-        // border: Border(top: BorderSide(color: Colors.purple, width: 10), bottom: BorderSide(color: Colors.purple, width: 10)),
-        // border: Border(top: BorderSide(color: Colors.white38, width: 10), bottom: BorderSide(color: Colors.white38, width: 8)),
         border: Border(bottom: BorderSide(color: Colors.purple, width: 8)),
       ),
       child: Row(
         children: [
-          Icon(statusIcon, color: statusColor),
-          const SizedBox(width: 12),
+          Icon(statusIcon, color: statusColor, size: 40),
+          const SizedBox(width: 16),
           Text(
             statusText,
             style: TextStyle(
               color: statusColor,
               fontWeight: FontWeight.bold,
               letterSpacing: 1.5,
+              fontSize: 16,
             ),
           ),
-          const SizedBox(width: 40),
+          const SizedBox(width: 50),
           _buildInfoItem(
             context,
             'MODE',
@@ -176,28 +175,23 @@ class DashboardScreen extends StatelessWidget {
                 ? '37°C Constant'
                 : 'Idle',
           ),
-          const SizedBox(width: 40),
+          const SizedBox(width: 50),
           _buildInfoItem(
             context,
             'CHAMBER',
             '${status.currentChamberTemp.toStringAsFixed(1)}°C',
           ),
-          const SizedBox(width: 40),
+          const SizedBox(width: 50),
           if (status.mode == OperationMode.thermocycle)
             _buildInfoItem(context, 'CYCLE', '${status.currentCycle}'),
           const Spacer(),
           IconButton(
-            // icon: const Icon(
-            //   Icons.emergency,//.report_problem,
-            //   color: AppTheme.accentError,
-            //   size: 32,
-            // ),
-            padding: EdgeInsets.zero, // Removes default 8.0 padding
-            constraints: const BoxConstraints(), // Clears the minimum 48x48 size rule
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
             icon: Image.asset(
               'assets/images/emergency-stop-3.png',
-              width: 50, // Set your exact desired width here
-              height: 50, // Set your exact desired height here
+              width: 70,
+              height: 70,
             ),
             onPressed: () => _showEmergencyDialog(context, viewModel),
             tooltip: 'Emergency Stop',
@@ -216,13 +210,13 @@ class DashboardScreen extends StatelessWidget {
           label,
           style: const TextStyle(
             color: Colors.white54,
-            fontSize: 10,
+            fontSize: 12,
             fontWeight: FontWeight.bold,
           ),
         ),
         Text(
           value,
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: 18),
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: 20),
         ),
       ],
     );
