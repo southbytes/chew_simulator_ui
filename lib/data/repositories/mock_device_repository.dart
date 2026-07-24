@@ -203,7 +203,10 @@ class MockDeviceRepository implements DeviceRepository {
 
         _currentStatus = _currentStatus.copyWith(
           currentChamberTemp: nextChamber,
-          currentChamber1Temp: chamber1,
+          temp1Sensor: _currentStatus.temp1Sensor.copyWith(
+            value: DoubleValue(chamber1),
+            status: _sensorStatusForValue(SensorType.temperature, chamber1),
+          ),
           currentChamber2Temp: chamber2,
           currentChamber3Temp: chamber3,
           currentChamber4Temp: chamber4,
@@ -250,12 +253,15 @@ class MockDeviceRepository implements DeviceRepository {
       final level = _modbusReader.readFloat32FromMockDevice(ModbusAddresses.levelSensor);
       final hits = _modbusReader.readUint16FromMockDevice(ModbusAddresses.hitCount, currentValue: _currentStatus.hitCount);
 
-      _currentStatus = _currentStatus.copyWith(
-        currentColdBathTemp: nextCold,
-        currentHotBathTemp: nextHot,
-        currentChamberTemp: nextChamber,
-        currentChamber1Temp: chamber1,
-        currentChamber2Temp: chamber2,
+       _currentStatus = _currentStatus.copyWith(
+         currentColdBathTemp: nextCold,
+         currentHotBathTemp: nextHot,
+         currentChamberTemp: nextChamber,
+         temp1Sensor: _currentStatus.temp1Sensor.copyWith(
+           value: DoubleValue(chamber1),
+           status: _sensorStatusForValue(SensorType.temperature, chamber1),
+         ),
+         currentChamber2Temp: chamber2,
         currentChamber3Temp: chamber3,
         currentChamber4Temp: chamber4,
         watchdogStatus: watchdog,
@@ -269,6 +275,43 @@ class MockDeviceRepository implements DeviceRepository {
       );
       _statusController.add(_currentStatus);
     });
+  }
+
+  //TODO: replace arbitrary values by values preset in a file
+  SensorStatus _sensorStatusForValue(SensorType type, double value) {
+    // Centralized sensor status logic per sensor type. Thresholds are conservative
+    // and can be adjusted to match real hardware behavior.
+    if (value.isNaN) return SensorStatus.faulty;
+
+    switch (type) {
+      case SensorType.temperature:
+        if (value < 0.0 || value > 100.0) return SensorStatus.faulty;
+        if (value > 30.0) return SensorStatus.overlimit;
+        return SensorStatus.normal;
+
+      case SensorType.level:
+        // Level sensor: negative = faulty. Very low or extremely high readings are "overlimit".
+        if (value < 0.0) return SensorStatus.faulty;
+        if (value < 5.0 || value > 300.0) return SensorStatus.overlimit;
+        return SensorStatus.normal;
+
+      case SensorType.flow:
+        // Flow sensor: negative is faulty, very high flow is overlimit
+        if (value < 0.0) return SensorStatus.faulty;
+        if (value > 10.0) return SensorStatus.overlimit;
+        return SensorStatus.normal;
+
+      case SensorType.pressure:
+        if (value < 0.0 || value > 200.0) return SensorStatus.faulty;
+        if (value > 120.0) return SensorStatus.overlimit;
+        return SensorStatus.normal;
+
+      case SensorType.digital:
+      default:
+        // For digital/text sensors represented numerically, consider out-of-range as faulty.
+        if (value < 0.0) return SensorStatus.faulty;
+        return SensorStatus.normal;
+    }
   }
 
   @override

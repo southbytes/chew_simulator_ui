@@ -47,3 +47,79 @@ Map<String, dynamic> _$ConstantModeSettingsToJson(
   'isInfinite': instance.isInfinite,
   'duration': instance.duration.inMicroseconds,
 };
+
+_Sensor _$SensorFromJson(Map<String, dynamic> json) => _Sensor(
+  id: json['id'] as String,
+  name: json['name'] as String,
+  type: $enumDecode(_$SensorTypeEnumMap, json['type']),
+  unit: json['unit'] as String?,
+  status:
+      $enumDecodeNullable(_$SensorStatusEnumMap, json['status']) ??
+      SensorStatus.normal,
+  value: json['value'] == null
+      ? null
+      : SensorValue.fromJson(json['value'] as Map<String, dynamic>),
+  lastUpdated: json['lastUpdated'] == null
+      ? null
+      : DateTime.parse(json['lastUpdated'] as String),
+);
+
+Map<String, dynamic> _$SensorToJson(_Sensor instance) => <String, dynamic>{
+  'id': instance.id,
+  'name': instance.name,
+  'type': _$SensorTypeEnumMap[instance.type]!,
+  'unit': instance.unit,
+  'status': _$SensorStatusEnumMap[instance.status]!,
+  'value': instance.value,
+  'lastUpdated': instance.lastUpdated?.toIso8601String(),
+};
+
+const _$SensorTypeEnumMap = {
+  SensorType.temperature: 'temperature',
+  SensorType.pressure: 'pressure',
+  SensorType.level: 'level',
+  SensorType.flow: 'flow',
+  SensorType.digital: 'digital',
+};
+
+const _$SensorStatusEnumMap = {
+  SensorStatus.offline: 'offline',
+  SensorStatus.online: 'online',
+  SensorStatus.warning: 'warning',
+  SensorStatus.alarm: 'alarm',
+  SensorStatus.normal: 'normal',
+  SensorStatus.faulty: 'faulty',
+  SensorStatus.overlimit: 'overlimit',
+};
+
+DoubleValue _$DoubleValueFromJson(Map<String, dynamic> json) => DoubleValue(
+  (json['value'] as num).toDouble(),
+  $type: json['type'] as String?,
+);
+
+Map<String, dynamic> _$DoubleValueToJson(DoubleValue instance) =>
+    <String, dynamic>{'value': instance.value, 'type': instance.$type};
+
+IntValue _$IntValueFromJson(Map<String, dynamic> json) =>
+    IntValue((json['value'] as num).toInt(), $type: json['type'] as String?);
+
+Map<String, dynamic> _$IntValueToJson(IntValue instance) => <String, dynamic>{
+  'value': instance.value,
+  'type': instance.$type,
+};
+
+BoolValue _$BoolValueFromJson(Map<String, dynamic> json) =>
+    BoolValue(json['value'] as bool, $type: json['type'] as String?);
+
+Map<String, dynamic> _$BoolValueToJson(BoolValue instance) => <String, dynamic>{
+  'value': instance.value,
+  'type': instance.$type,
+};
+
+TextValue _$TextValueFromJson(Map<String, dynamic> json) =>
+    TextValue(json['value'] as String, $type: json['type'] as String?);
+
+Map<String, dynamic> _$TextValueToJson(TextValue instance) => <String, dynamic>{
+  'value': instance.value,
+  'type': instance.$type,
+};

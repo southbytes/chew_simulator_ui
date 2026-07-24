@@ -21,10 +21,7 @@ abstract class ThermocycleSettings with _$ThermocycleSettings {
   const ThermocycleSettings._();
 
   Duration get estimatedDuration {
-    final cycleTime =
-        dwellTimeSeconds * 2 +
-        transferTimeSeconds * 2 +
-        drainingTimeSeconds * 2;
+    final cycleTime = dwellTimeSeconds * 2 + transferTimeSeconds * 2 + drainingTimeSeconds * 2;
     return Duration(seconds: cycleTime * targetCycles);
   }
 }
@@ -43,6 +40,39 @@ abstract class ConstantModeSettings with _$ConstantModeSettings {
   const ConstantModeSettings._();
 }
 
+// Sensor
+enum SensorStatus { offline, online, warning, alarm, normal, faulty, overlimit }
+enum SensorType { temperature, pressure, level, flow, digital }
+
+@freezed
+abstract class Sensor with _$Sensor {
+  const factory Sensor({
+    required String id,
+    required String name,
+    required SensorType type,
+
+    String? unit,
+
+    @Default(SensorStatus.normal) SensorStatus status,
+
+    SensorValue? value,
+
+    DateTime? lastUpdated,
+  }) = _Sensor;
+
+  factory Sensor.fromJson(Map<String, dynamic> json) => _$SensorFromJson(json);
+}
+
+@Freezed(unionKey: 'type')
+sealed class SensorValue with _$SensorValue {
+  const factory SensorValue.doubleValue(double value) = DoubleValue;
+  const factory SensorValue.intValue(int value) = IntValue;
+  const factory SensorValue.boolValue(bool value) = BoolValue;
+  const factory SensorValue.textValue(String value) = TextValue;
+
+  factory SensorValue.fromJson(Map<String, dynamic> json) => _$SensorValueFromJson(json);
+}
+
 enum DeviceState { ready, running, paused, error }
 
 enum OperationMode { thermocycle, constant, idle }
@@ -55,7 +85,11 @@ abstract class DeviceStatus with _$DeviceStatus {
     @Default(0.0) double currentColdBathTemp,
     @Default(0.0) double currentHotBathTemp,
     @Default(0.0) double currentChamberTemp,
-    @Default(0.0) double currentChamber1Temp,
+    @Default(
+      Sensor(id: 'chamber1_temp', name: 'Chamber 1 Temperature', type: SensorType.temperature, value: const SensorValue.doubleValue(0.0)),
+    )
+    Sensor temp1Sensor,
+    // @Default(0.0) double currentChamber1Temp,
     @Default(0.0) double currentChamber2Temp,
     @Default(0.0) double currentChamber3Temp,
     @Default(0.0) double currentChamber4Temp,

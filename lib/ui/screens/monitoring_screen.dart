@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:flutter/rendering.dart';
+import '../../domain/models/models.dart';
 import '../../viewmodels/monitoring_view_model.dart';
 import '../theme/app_theme.dart';
 
@@ -21,31 +23,42 @@ class MonitoringScreen extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  'Real-time Monitoring',
-                  style: Theme.of(context).textTheme.displayLarge,
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: AppTheme.primaryColor.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: AppTheme.primaryColor.withValues(alpha: 0.5)),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.touch_app, color: AppTheme.primaryColor, size: 20),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Hits: ${viewModel.status.hitCount}',
-                        style: const TextStyle(
-                          color: AppTheme.primaryColor,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
+                Text('Real-time Monitoring', style: Theme.of(context).textTheme.displayLarge),
+                Row(
+                  children: [
+                                    _buildSensorIndicator(viewModel.status.temp1Sensor),
+                    const SizedBox(width: 16),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: AppTheme.primaryColor.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: AppTheme.primaryColor.withValues(alpha: 0.5)),
                       ),
-                    ],
-                  ),
+                      child: Row(
+                        children: [
+                          IconButton(
+                            onPressed: () => _resetCount(context),
+                            icon: const Icon(
+                              Icons.touch_app,
+                              color: AppTheme.primaryColor,
+                              size: 20,
+                            ),
+                            tooltip: 'Reset Hit Count',
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Hits: ${viewModel.status.hitCount}',
+                            style: const TextStyle(
+                              color: AppTheme.primaryColor,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -59,10 +72,7 @@ class MonitoringScreen extends StatelessWidget {
                     children: [
                       const Text(
                         'Temperature Variation History',
-                        style: TextStyle(
-                          color: Colors.white54,
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: TextStyle(color: Colors.white54, fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 40),
                       Expanded(
@@ -71,11 +81,7 @@ class MonitoringScreen extends StatelessWidget {
                                 child: Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    Icon(
-                                      Icons.analytics_outlined,
-                                      size: 48,
-                                      color: Colors.white24,
-                                    ),
+                                    Icon(Icons.analytics_outlined, size: 48, color: Colors.white24),
                                     const SizedBox(height: 16),
                                     const Text(
                                       'Waiting for monitoring data...\nStart a process to begin tracking.',
@@ -130,12 +136,7 @@ class MonitoringScreen extends StatelessWidget {
                                       spots: history
                                           .asMap()
                                           .entries
-                                          .map(
-                                            (e) => FlSpot(
-                                              e.key.toDouble(),
-                                              e.value,
-                                            ),
-                                          )
+                                          .map((e) => FlSpot(e.key.toDouble(), e.value))
                                           .toList(),
                                       isCurved: true,
                                       color: AppTheme.primaryColor,
@@ -144,9 +145,7 @@ class MonitoringScreen extends StatelessWidget {
                                       dotData: const FlDotData(show: false),
                                       belowBarData: BarAreaData(
                                         show: true,
-                                        color: AppTheme.primaryColor.withValues(
-                                          alpha: 0.1,
-                                        ),
+                                        color: AppTheme.primaryColor.withValues(alpha: 0.1),
                                       ),
                                     ),
                                   ],
@@ -166,6 +165,120 @@ class MonitoringScreen extends StatelessWidget {
     );
   }
 
+  void _resetCount(BuildContext context) {
+    // viewModel.resetHitCount();
+    _showResetDoneSnackbar(context);
+  }
+
+  void _showResetDoneSnackbar(BuildContext context) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Reset Done'),
+        backgroundColor: AppTheme.accentReady,
+        duration: Duration(seconds: 2),
+      ),
+    );
+  }
+
+  Widget _buildSensorIndicator(Sensor sensor) {
+    // double temp = 0.0;
+    // if (sensor.value is DoubleValue) {
+    //   temp = (sensor.value as DoubleValue).value;
+    // }
+    Color color = AppTheme.primaryColor;
+    String tooltipMsg = 'Normal';
+
+    // if (temp < 0 || temp > 100) {
+    if (sensor.status == SensorStatus.faulty) {
+      color = Colors.yellow;
+      tooltipMsg = 'Sensor failure';
+    } else if (sensor.status == SensorStatus.overlimit) {
+      color = Colors.red;
+      tooltipMsg = 'Over limit';
+    }
+
+    return Tooltip(
+      message: tooltipMsg,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.2),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: color.withValues(alpha: 0.5)),
+        ),
+        child:
+            // Row(
+            //   children: [
+            //     Icon(Icons.thermostat, color: color, size: 20),
+            //     const SizedBox(width: 8),
+            //     Text(
+            //       '${sensor.name}: ${(sensor.value as DoubleValue).value.toStringAsFixed(1)}°C',
+            //       style: TextStyle(
+            //         color: color,
+            //         fontWeight: FontWeight.bold,
+            //         fontSize: 16,
+            //       ),
+            //     ),
+            //   ],
+            // ),
+            _buildInfoItem(color, sensor.name, sensor.type, sensor.value ?? DoubleValue(0.0)),
+      ),
+    );
+  }
+
+  Widget _buildInfoItem(Color color, String label, SensorType type, SensorValue value) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(color: Colors.white54, fontSize: 10, fontWeight: FontWeight.bold),
+        ),
+        Row(
+          children: [
+            Icon(_iconForSensorType(type), color: color, size: 20),
+            const SizedBox(width: 8),
+            Text(
+              _formatSensorValue(type, value),
+              style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 16),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  String _formatSensorValue(SensorType type, SensorValue value) {
+    // Safely extract numeric value when possible
+    double? numeric;
+    if (value is DoubleValue) numeric = value.value;
+
+    switch (type) {
+      case SensorType.temperature:
+        return numeric != null ? '${numeric.toStringAsFixed(1)}°C' : value.toString();
+      case SensorType.level:
+        return numeric != null ? '${numeric.toStringAsFixed(1)} cm' : value.toString();
+      case SensorType.flow:
+        return numeric != null ? '${numeric.toStringAsFixed(1)} L/min' : value.toString();
+      default:
+        return numeric != null ? numeric.toStringAsFixed(1) : value.toString();
+    }
+  }
+
+  IconData _iconForSensorType(SensorType type) {
+    switch (type) {
+      case SensorType.temperature:
+        return Icons.thermostat;
+      case SensorType.level:
+        return Icons.opacity; // water/level
+      case SensorType.flow:
+        return Icons.speed; // flow indicator
+      default:
+        return Icons.device_unknown;
+    }
+  }
+
   Widget _buildLogPanel(BuildContext context) {
     return Card(
       child: Container(
@@ -176,30 +289,19 @@ class MonitoringScreen extends StatelessWidget {
           children: [
             const Text(
               'System Log',
-              style: TextStyle(
-                color: Colors.white54,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(color: Colors.white54, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
             Expanded(
               child: ListView(
                 children: const [
-                  _LogEntry(
-                    time: '14:32:01',
-                    message: 'System initialized',
-                    level: 'INFO',
-                  ),
+                  _LogEntry(time: '14:32:01', message: 'System initialized', level: 'INFO'),
                   _LogEntry(
                     time: '14:32:05',
                     message: 'Cold bath stabilization started',
                     level: 'INFO',
                   ),
-                  _LogEntry(
-                    time: '14:45:12',
-                    message: 'Ready for operation',
-                    level: 'INFO',
-                  ),
+                  _LogEntry(time: '14:45:12', message: 'Ready for operation', level: 'INFO'),
                 ],
               ),
             ),
@@ -215,11 +317,7 @@ class _LogEntry extends StatelessWidget {
   final String message;
   final String level;
 
-  const _LogEntry({
-    required this.time,
-    required this.message,
-    required this.level,
-  });
+  const _LogEntry({required this.time, required this.message, required this.level});
 
   @override
   Widget build(BuildContext context) {
@@ -229,10 +327,7 @@ class _LogEntry extends StatelessWidget {
         children: [
           Text(
             time,
-            style: const TextStyle(
-              color: Colors.white38,
-              fontFamily: 'monospace',
-            ),
+            style: const TextStyle(color: Colors.white38, fontFamily: 'monospace'),
           ),
           const SizedBox(width: 16),
           Container(
@@ -241,10 +336,7 @@ class _LogEntry extends StatelessWidget {
               color: Colors.blue.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(4),
             ),
-            child: Text(
-              level,
-              style: const TextStyle(fontSize: 10, color: Colors.blue),
-            ),
+            child: Text(level, style: const TextStyle(fontSize: 10, color: Colors.blue)),
           ),
           const SizedBox(width: 16),
           Text(message, style: const TextStyle(color: Colors.white70)),
